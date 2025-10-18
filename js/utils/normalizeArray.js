@@ -1,10 +1,11 @@
-// utilitário para normalizar campos que podem ser: text[], json string, CSV, object, or null/undefined
-// retorna sempre um array de strings (padrão: [])
+// js/utils/normalizeArray.js
+// Utilitário para normalizar campos que podem ser: text[], json string, CSV, object, or null/undefined
+// Retorna sempre um array de strings (padrão: [])
 export function normalizeArrayField(value) {
-  if (!value && value !== 0) return [];
+  if (value === undefined || value === null) return [];
   // Já é array -> filtra e transforma em strings
   if (Array.isArray(value)) return value.map(String).filter(Boolean);
-  // Caso jsonb vindo do supabase pode aparecer como object/Array-like
+  // Caso jsonb vindo do supabase possa aparecer como object/Array-like
   if (typeof value === 'object') {
     try {
       return Array.from(value).map(String).filter(Boolean);

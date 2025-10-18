@@ -1,3 +1,7 @@
+// js/servicos.js (VERSÃO COMPLETA E REVISADA)
+// Mantém funcionalidades existentes e garante normalização de imagens/arrays.
+// Usa normalizeArrayField para aceitar imagens_url (text[]), imagensURL (camelCase), imagens_url_arr, etc.
+
 import { supabase } from './supabase-config.js';
 import { normalizeArrayField, firstArrayItem } from './utils/normalizeArray.js';
 
@@ -39,17 +43,20 @@ export function renderServicos(records) {
   renderServicos(regs);
 })();
 
+//
+// Public rendering helpers (used in services page)
+//
 
-// Função auxiliar para renderizar os cards em um container específico
 function renderizarServicos(container, servicos) {
-    if (servicos.length === 0) {
+    if (!container) return;
+    if (!servicos || servicos.length === 0) {
         container.innerHTML = '<p>Nenhum serviço disponível nesta categoria no momento.</p>';
         return;
     }
 
     container.innerHTML = ''; // Limpa o container antes de adicionar os novos cards
     servicos.forEach(servico => {
-        const fotos = servico.imagens_url || [];
+        const fotos = normalizeArrayField(servico.imagens_url ?? servico.imagensURL ?? servico.imagens_url_arr ?? servico.imagensURL_arr);
         const card = `
             <div class="servico-card">
                 <div class="card-imagem-container">
@@ -64,18 +71,17 @@ function renderizarServicos(container, servicos) {
                 </div>
                 <div class="servico-card-info">
                     <h3>${servico.nome}</h3>
-                    <p class="servico-preco">R$ ${servico.valor ? servico.valor.toFixed(2).replace('.', ',') : 'Consulte'}</p>
+                    <p class="servico-preco">R$ ${servico.valor ? Number(servico.valor).toFixed(2).replace('.', ',') : 'Consulte'}</p>
                     <p class="servico-descricao">${servico.descricao || 'Descrição não disponível.'}</p>
                     <a href="agendamento.html" class="btn-principal">Agendar Agora</a>
                 </div>
             </div>
         `;
-        container.innerHTML += card;
+        container.insertAdjacentHTML('beforeend', card);
     });
 }
 
-
-async function carregarServicosPublicos() {
+export async function carregarServicosPublicos() {
     const gridPrincipais = document.getElementById('servicos-grid-principais');
     const gridAdicionais = document.getElementById('servicos-grid-adicionais');
 
@@ -89,51 +95,50 @@ async function carregarServicosPublicos() {
 
     if (error) {
         gridPrincipais.innerHTML = '<p>Erro ao carregar os serviços. Tente novamente mais tarde.</p>';
-        gridAdicionais.innerHTML = ''; // Limpa o outro grid
+        gridAdicionais.innerHTML = '';
         console.error(error);
         return;
     }
 
-    // Separa os serviços em duas listas
-    const servicosPrincipais = servicos.filter(s => s.tipo_servico === 'principal');
-    const servicosAdicionais = servicos.filter(s => s.tipo_servico === 'adicional');
+    const servicosPrincipais = (servicos || []).filter(s => s.tipo_servico === 'principal');
+    const servicosAdicionais = (servicos || []).filter(s => s.tipo_servico === 'adicional');
 
-    // Renderiza cada lista em seu respectivo container
     renderizarServicos(gridPrincipais, servicosPrincipais);
     renderizarServicos(gridAdicionais, servicosAdicionais);
 }
 
-// Função principal de setup
+// Setup público (para páginas que exibem serviços)
 export function setupServicosPublicos() {
-    // Adiciona uma verificação para garantir que estamos na página de serviços
-    if (!document.getElementById('servicos-grid-principais')) {
-        return;
-    }
+    if (!document.getElementById('servicos-grid-principais')) return;
 
     carregarServicosPublicos();
 
-    // Adiciona o listener de eventos a um container pai para funcionar em ambos os grids
-    const servicosContainer = document.getElementById('servicos-lista');
+    // Delegated listener for slider controls
+    const servicosContainer = document.getElementById('servicos-lista') || document.body;
     servicosContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('slider-btn')) {
-            const direction = parseInt(e.target.dataset.direction, 10);
-            const container = e.target.closest('.card-imagem-container');
-            if (!container) return;
+        const btn = e.target.closest('.slider-btn');
+        if (!btn) return;
+        const direction = parseInt(btn.dataset.direction, 10);
+        const container = btn.closest('.card-imagem-container');
+        if (!container) return;
 
-            const images = container.querySelectorAll('.adocao-imagem');
-            const activeImage = container.querySelector('.adocao-imagem.active');
-            if (!activeImage || images.length <= 1) return;
+        const images = Array.from(container.querySelectorAll('.adocao-imagem'));
+        const activeImage = container.querySelector('.adocao-imagem.active');
+        if (!activeImage || images.length <= 1) return;
 
-            let newIndex = parseInt(activeImage.dataset.index, 10) + direction;
+        let newIndex = parseInt(activeImage.dataset.index, 10) + direction;
+        if (newIndex < 0) newIndex = images.length - 1;
+        if (newIndex >= images.length) newIndex = 0;
 
-            if (newIndex < 0) {
-                newIndex = images.length - 1;
-            } else if (newIndex >= images.length) {
-                newIndex = 0;
-            }
-
-            activeImage.classList.remove('active');
-            images[newIndex].classList.add('active');
-        }
+        activeImage.classList.remove('active');
+        images.forEach(img => img.classList.remove('active'));
+        images[newIndex].classList.add('active');
     });
 }
+
+export default {
+  fetchServicos,
+  renderServicos,
+  carregarServicosPublicos,
+  setupServicosPublicos
+};
