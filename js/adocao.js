@@ -449,7 +449,19 @@ export function setupAdocao() {
           reader.onload = function (e) {
             const previewItem = document.createElement('div');
             previewItem.classList.add('preview-item');
-            previewItem.innerHTML = `<img src="${e.target.result}" alt="${file.name}" class="preview-image-thumbnail"><span class="preview-file-name">${file.name}</span>`;
+            
+            // Create elements safely to prevent XSS
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = file.name; // Safe - set as attribute
+            img.className = 'preview-image-thumbnail';
+            
+            const fileNameSpan = document.createElement('span');
+            fileNameSpan.className = 'preview-file-name';
+            fileNameSpan.textContent = file.name; // Safe - textContent auto-escapes
+            
+            previewItem.appendChild(img);
+            previewItem.appendChild(fileNameSpan);
             adocaoFotosPreview.appendChild(previewItem);
           }
           reader.readAsDataURL(file);
