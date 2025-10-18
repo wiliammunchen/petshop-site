@@ -32,8 +32,14 @@ WHERE schemaname = 'public' AND tablename = 'pets_adocao';
 -- ========================================
 -- 4. DESABILITAR RLS (SE NECESSÁRIO)
 -- ========================================
--- ATENÇÃO: Execute apenas se você quiser desabilitar completamente o RLS
--- (não recomendado para produção, mas pode ser usado para testes)
+-- ⚠️ ATENÇÃO CRÍTICA DE SEGURANÇA:
+-- Desabilitar RLS remove TODA a segurança da tabela, permitindo acesso
+-- irrestrito aos dados. Isto pode expor informações sensíveis dos tutores
+-- (telefones, emails) publicamente.
+-- 
+-- NUNCA faça isso em produção!
+-- Use apenas em ambiente de desenvolvimento/testes e RE-HABILITE imediatamente após.
+-- 
 -- ALTER TABLE public.pets_adocao DISABLE ROW LEVEL SECURITY;
 
 -- ========================================
@@ -58,6 +64,11 @@ FOR SELECT
 USING (true);
 
 -- Política 2: Permitir que todos (incluindo anônimos) possam INSERIR anúncios
+-- ⚠️ NOTA DE SEGURANÇA: Esta política permite inserções anônimas, o que pode levar
+-- a spam ou abuso. Em produção, considere:
+-- 1. Adicionar autenticação obrigatória, OU
+-- 2. Implementar CAPTCHA na aplicação, OU
+-- 3. Implementar rate limiting no nível do banco ou aplicação
 CREATE POLICY "Permitir inserção pública de pets_adocao"
 ON public.pets_adocao
 FOR INSERT

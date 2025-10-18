@@ -98,15 +98,28 @@ ORDER BY created_at DESC
 LIMIT 5;
 ```
 
-### Opção 3: Solução Rápida (Para Testes)
+### Opção 3: Solução Rápida (Para Testes) ⚠️ ALTO RISCO
 
-Se você só quer testar rapidamente, pode desabilitar completamente o RLS:
+**⚠️ ATENÇÃO CRÍTICA**: Esta solução remove TODA a segurança da tabela e expõe dados sensíveis (telefones, emails dos tutores) publicamente na internet. 
+
+**NUNCA use isto em produção!**
+
+Se você só quer testar rapidamente em ambiente de desenvolvimento local:
 
 ```sql
+-- Desabilitar RLS (APENAS PARA TESTES)
 ALTER TABLE public.pets_adocao DISABLE ROW LEVEL SECURITY;
 ```
 
-**⚠️ ATENÇÃO**: Esta solução não é recomendada para produção, pois remove toda a segurança da tabela.
+**IMPORTANTE: Após testar, RE-HABILITE IMEDIATAMENTE executando:**
+
+```sql
+-- 1. Re-habilitar RLS
+ALTER TABLE public.pets_adocao ENABLE ROW LEVEL SECURITY;
+
+-- 2. Criar políticas corretas (copie da seção "Opção 2" acima)
+-- Execute todos os comandos CREATE POLICY da Opção 2
+```
 
 ## Como Testar se Está Funcionando
 
@@ -168,3 +181,35 @@ Se o problema persistir após seguir este guia, forneça:
 1. Screenshot do console do navegador (F12 > Console)
 2. Screenshot das políticas RLS da tabela `pets_adocao`
 3. Resultado da consulta SQL de verificação
+
+## Considerações de Segurança
+
+### Riscos de Segurança Identificados
+
+A tabela `pets_adocao` contém informações sensíveis (telefones e emails dos tutores). As políticas sugeridas neste guia têm os seguintes riscos:
+
+1. **Inserção Anônima**: Qualquer pessoa pode criar anúncios, o que pode levar a spam
+2. **Leitura Pública**: Todos os dados são visíveis publicamente (necessário para o site funcionar)
+
+### Recomendações para Produção
+
+Para um ambiente de produção mais seguro, considere:
+
+1. **Rate Limiting**: Implemente limites de taxa para prevenir spam
+2. **Validação de Dados**: Valide telefones e emails no backend
+3. **Moderação**: Adicione um sistema de aprovação de anúncios antes de publicar
+4. **CAPTCHA**: Adicione verificação CAPTCHA no formulário de anúncio
+5. **Monitoramento**: Configure alertas para detecção de abuso
+
+### Política Alternativa (Mais Segura)
+
+Se preferir maior segurança, exija autenticação para inserir anúncios:
+
+```sql
+CREATE POLICY "Permitir inserção autenticada de pets_adocao"
+ON public.pets_adocao
+FOR INSERT
+WITH CHECK (auth.role() = 'authenticated');
+```
+
+**Nota**: Isso exigirá que usuários façam login antes de anunciar pets.
