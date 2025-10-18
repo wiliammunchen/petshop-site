@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espaço PetShop - Agendamento</title>
+    <link rel="icon" type="image/png" href="images/icone-patinha.png">
+    <meta name="description" content="Agende online o banho, tosa e outros serviços para o seu pet.">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://espacopet.site/agendamento.html">
+    <meta property="og:title" content="Nossos Serviços - Espaço PetShop">
+    <meta property="og:description" content="Oferecemos o melhor para seu amigo de quatro patas, com muito carinho e profissionalismo. Conheça nossos pacotes!">
+    <meta property="og:image" content="https://espacopet.site/images/logo-petshop.png">
+    <meta property="og:locale" content="pt_BR">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://espacopet.site/agendamento.html">
+    <meta property="twitter:title" content="Nossos Serviços - Espaço PetShop">
+    <meta property="twitter:description" content="Oferecemos o melhor para seu amigo de quatro patas, com muito carinho e profissionalismo. Conheça nossos pacotes!">
+    <meta property="twitter:image" content="https://espacopet.site/images/logo-petshop.png">
+
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">
+                <img src="images/logo-petshop.png" alt="Logo PetShop Amigo Fiel">
+            </a>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Início</a></li>
+                <li><a href="servicos.html">Serviços</a></li>
+                <li><a href="agendamento.html">Agendamento</a></li>
+                <li><a href="adocao.html">Adoção</a></li>
+                <li><a href="acesso-restrito.html">Acesso Restrito</a></li>                
+                <li><a href="contato.html">Contato</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="agendamento-form">
+            <div class="container">
+                <form id="form-agendamento-publico" class="form-container">
+
+                    <h2 style="text-align: center; grid-column: 1 / -1;">Intenção de agendamento de horário para seu pet!</h2>
+                    <p style="text-align: center; grid-column: 1 / -1; margin-top: -1.5rem;">Preencha os dados e selecione uma data para ver os horários disponíveis.</p>
+
+                    <h3 class="form-section-title">Dados do Cliente</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label for="cliente-nome">Nome Completo*</label><input type="text" id="cliente-nome" name="cliente-nome" required></div>
+                        <div class="form-group"><label for="cliente-telefone">Telefone/WhatsApp*</label><input type="tel" id="cliente-telefone" name="cliente-telefone" placeholder="(XX) XXXXX-XXXX" required></div>
+                        <div class="form-group"><label for="cliente-email">E-mail</label><input type="email" id="cliente-email" name="cliente-email"></div>
+                        <div class="form-group"><label for="cliente-cpf">CPF</label><input type="text" id="cliente-cpf" name="cliente-cpf"></div>
+                        <div class="form-group" style="grid-column: 1 / span 2;"><label for="cliente-endereco">Rua e Número*</label><input type="text" id="cliente-endereco" name="cliente-endereco" required></div>
+                        <div class="form-group">
+                            <label for="cliente-bairro">Bairro*</label>
+                            <select id="cliente-bairro" name="cliente-bairro" required>
+                                <option value="">Carregando bairros...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tele-busca">Precisa de Tele-Busca?*</label>
+                            <select id="tele-busca" name="tele_busca" required>
+                                <option value="nao">Não, vou levar o pet</option>
+                                <option value="sim">Sim, preciso de tele-busca</option>
+                            </select>
+                        </div>
+                        <div id="aviso-tele-busca" style="display: none; grid-column: 1 / -1;">
+                            <div class="info-box">
+                                <i class="fas fa-info-circle"></i>
+                                <div>
+                                    <p><strong>Horários de Tele-Busca e Entrega:</strong></p>
+                                    <ul>
+                                        <li><strong>Manhã:</strong> Buscamos entre 8:30h e 9:00h, com entrega após as 12:00h.</li>
+                                        <li><strong>Tarde:</strong> Buscamos entre 13:30h e 14:00h, com entrega ao final do dia.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-divider"></div>
+
+                    <h3 class="form-section-title">Dados dos Pets e Serviços</h3>
+                    <div id="pets-container" class="full-width">
+                        </div>
+                    <div class="form-group full-width">
+                        <button type="button" id="btn-add-pet" class="btn-secondary">
+                            <i class="fas fa-plus-circle"></i> Adicionar outro Pet
+                        </button>
+                    </div>
+
+                    <div class="form-divider"></div>
+
+                    <div class="form-group full-width date-selection-container">
+                        <label for="data-agendamento">Escolha a Data para ver os horários*</label>
+                        <input type="date" id="data-agendamento" name="data" required>
+                    
+                        <div id="horarios-disponiveis-container">
+                            <p class="placeholder-text">Por favor, selecione uma data.</p>
+                        </div>
+                        <input type="hidden" id="horario-selecionado" name="horario" required>
+                    </div>
+
+                    <div class="form-group full-width form-submit-container">
+                        <button type="submit" class="btn-principal">Enviar Solicitação de Agendamento</button>
+                    </div>
+
+                </form>
+
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Espaço PetShop. Todos os direitos reservados.</p>
+        <p>Desenvolvido por Wiliam München.</p>
+    </footer>
+
+    <a href="https://api.whatsapp.com/send?phone=+555197326778&text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20os%20serviços." class="whatsapp-float" target="_blank" aria-label="Fale conosco pelo WhatsApp">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="30" height="30" fill="#FFF"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 221.9-99.6 221.9-222 .1-59.3-23.1-115-64.8-156.9zM223.9 439.6c-33.8 0-66.3-13.1-90.4-36.5L111.4 381 47.9 398.4l17.4-63.5-5.9-10.4C34.4 295.6 24 259.3 24 222.1c0-110.5 89.8-200.3 200-200.3 54.5 0 105.7 21.2 143.8 59.4 38.2 38.2 59.3 89.4 59.3 143.8 0 110.5-89.8 200.3-200.2 200.3zm108.2-132.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg>
+    </a>
+    <script>
+        document.getElementById('cliente-cpf').addEventListener('input', function (e) {
+            let value = e.target.value;
+            value = value.replace(/\D/g, "");
+            value = value.replace(/^(\d{3})(\d)/, "$1.$2");
+            value = value.replace(/(\d{3})(\d)/, "$1.$2");
+            value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+            e.target.value = value;
+        });
+    </script>
+</body>
+    <script src="js/supabase-config.js" type="module"></script>
+    <script src="js/main.js" type="module"></script>
+    <script src="js/agendamento-publico.js" type="module"></script> </body>
+</html>

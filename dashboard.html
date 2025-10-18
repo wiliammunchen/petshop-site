@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - Espaço PetShop</title>
+    <link rel="icon" type="image/png" href="images/icone-patinha.png">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="images/logo-petshop.png" alt="Logo espaço PetShop" class="sidebar-logo">
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="nav-link" data-view="inicio"><i class="fas fa-home"></i> <span>Início</span></a></li>
+                    <li>
+                        <a href="#" class="nav-link has-submenu"><i class="fas fa-edit"></i> <span>Cadastros</span></a>
+                        <ul class="submenu">
+                            <li><a href="#" class="nav-link" data-view="gerenciar-bairros"><i class="fas fa-map-marker-alt"></i> <span>Bairros</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="gerenciar-pagamentos"><i class="fas fa-credit-card"></i> <span>Formas de Pagamento</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="gerenciar-horarios"><i class="fas fa-clock"></i> <span>Horários</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="gerenciar-categorias"><i class="fas fa-sitemap"></i> <span>Categorias</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="cadastrar-cliente"><i class="fas fa-user-plus"></i> <span>Cliente</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="clientes-pendentes"><i class="fas fa-user-clock"></i> <span>Clientes Pendentes</span> <span id="contador-clientes-pendentes" class="notification-badge"></span></a></li>
+                            <li><a href="#" class="nav-link" data-view="cadastrar-fornecedor"><i class="fas fa-truck"></i> <span>Fornecedor</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="cadastrar-produto"><i class="fas fa-box"></i> <span>Produto</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="gerenciar-racas"><i class="fas fa-tags"></i> <span>Raças</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="cadastrar-servico"><i class="fas fa-cut"></i> <span>Serviços</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="gerenciar-stories"><i class="fas fa-history"></i> <span>Stories</span></a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link has-submenu"><i class="fas fa-concierge-bell"></i> <span>Atendimento</span></a>
+                        <ul class="submenu">
+                            <li><a href="#" class="nav-link" data-view="agendamentos"><i class="fas fa-calendar-alt"></i> <span>Agenda</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="listar-servicos"><i class="fas fa-list-ul"></i> <span>Listar Serviços</span></a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="#" class="nav-link has-submenu"><i class="fas fa-heart"></i> <span>Adoções</span></a>
+                        <ul class="submenu">
+                            <li><a href="#" class="nav-link" data-view="gerenciar-adocao"><i class="fas fa-paw"></i> <span>Gerenciar Anúncios</span></a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="#" class="nav-link has-submenu"><i class="fas fa-chart-line"></i> <span>Relatórios</span></a>
+                        <ul class="submenu">
+                            <li>
+                                <a href="#" class="nav-link has-submenu"><i class="fas fa-tasks"></i> <span>Operacionais</span></a>
+                                <ul class="submenu submenu-level-2">
+                                    <li><a href="#" class="nav-link" data-view="rel-op-agendamentos">Agend. por Período</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-op-servicos-mais-realizados">Serviços Mais Realizados</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-op-taxa-comparecimento">Taxa de Comparecimento</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-tempo-medio-servico"></i> Tempo Médio por Serviço</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="#" class="nav-link has-submenu"><i class="fas fa-dollar-sign"></i> <span>Financeiros</span></a>
+                                <ul class="submenu submenu-level-2">
+                                    <li><a href="#" class="nav-link" data-view="rel-fin-faturamento-servico">Faturamento por Serviço</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-fin-ticket-medio">Ticket Médio</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-fin-receitas-periodo">Receitas por Período</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-fin-lucro-real">Lucro Real</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="#" class="nav-link has-submenu"><i class="fas fa-users"></i> <span>Clientes e Pets</span></a>
+                                <ul class="submenu submenu-level-2">
+                                    <li><a href="#" class="nav-link" data-view="listar-clientes">Lista de Clientes</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-cli-historico-pet">Histórico por Pet</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-cli-mais-frequentes">Clientes Mais Frequentes</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-cli-novos-clientes">Novos Clientes</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="#" class="nav-link has-submenu"><i class="fas fa-box-open"></i> <span>Estoque e Insumos</span></a>
+                                <ul class="submenu submenu-level-2">
+                                    <li><a href="#" class="nav-link" data-view="listar-produtos">Lista de Produtos</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-est-consumo-servico">Consumo por Serviço</a></li>
+                                    <li><a href="#" class="nav-link" data-view="rel-est-reposicao">Reposição Necessária</a></li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="#" class="nav-link has-submenu"><i class="fas fa-list"></i> <span>Listas Gerais</span></a>
+                                <ul class="submenu submenu-level-2">
+                                    <li><a href="#" class="nav-link" data-view="listar-fornecedores">Lista de Fornecedores</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <li>
+                        <a href="#" class="nav-link has-submenu"><i class="fas fa-users-cog"></i> <span>Admin</span></a>
+                        <ul class="submenu">
+                            <li><a href="#" class="nav-link" data-view="listar-usuarios"><i class="fas fa-user-shield"></i> <span>Lista de Usuários</span></a></li>
+                            <li><a href="#" class="nav-link" data-view="backup"><i class="fas fa-database"></i> <span>Backup e Restauração</span></a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                 <a href="#" id="btn-logout"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></a>
+            </div>
+        </aside>
+
+        <div class="content-wrapper">
+            <header class="top-bar">
+                <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+                <h2>Painel de Gestão</h2>
+            </header>
+             <main class="main-content">
+                <div id="view-inicio" class="view active">
+                    <div class="dashboard-grid">
+                        <info-card
+                            id="metric-faturamento-dia"
+                            title="Faturamento do Dia"
+                            icon="fas fa-dollar-sign">
+                        </info-card>
+                        <info-card
+                            id="metric-faturamento-semana"
+                            title="Faturamento da Semana"
+                            icon="fas fa-calendar-day">
+                        </info-card>
+                        <info-card
+                            id="metric-faturamento-mes"
+                            title="Faturamento do Mês"
+                            icon="fas fa-calendar-check">
+                        </info-card>
+                        <info-card
+                            id="metric-agendamentos-semana"
+                            title="Agendamentos na Semana"
+                            icon="fas fa-calendar-alt">
+                        </info-card>
+                    </div>
+
+                    <div class="dashboard-columns">
+                        <div class="dashboard-section">
+                            <h2><i class="fas fa-calendar-week"></i> Agendamentos da Semana</h2>
+                            <ul class="lista-agendamentos-hoje" id="agendamentos-semana-lista">
+                                <li>Carregando agendamentos...</li>
+                            </ul>
+                        </div>
+                        <div class="dashboard-section">
+                            <h2><i class="fas fa-chart-pie"></i> Serviços Mais Realizados (Mês)</h2>
+                            <div class="chart-container">
+                                <canvas id="servicos-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-rel-fin-lucro-real" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-balance-scale-right"></i> Relatório de Lucro Real</h2>
+                        <form id="form-filtro-lucro-real" class="dashboard-form relatorio-filtros">
+                            <div class="form-group">
+                                <label for="lucro-real-periodo">Período</label>
+                                <select id="lucro-real-periodo">
+                                    <option value="hoje">Hoje</option>
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="lucro-real-data-inicio">Data Início</label>
+                                <input type="date" id="lucro-real-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="lucro-real-data-fim">Data Fim</label>
+                                <input type="date" id="lucro-real-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-lucro-real">
+                            <p>Selecione o período e clique em "Gerar Relatório" para calcular o lucro real.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-listar-usuarios" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-users"></i> Usuários do Sistema</h2>
+                        <div class="header-actions">
+                            <button id="btn-refresh-usuarios" class="btn-secondary" title="Atualizar Lista"><i class="fas fa-sync-alt"></i> Atualizar</button>                            <button id="btn-criar-usuario-lista" class="btn-principal"><i class="fas fa-user-plus"></i> Criar Novo Usuário</button>
+                        </div>
+                        <div class="table-wrapper">
+                        <table class="dashboard-table" id="tabela-usuarios">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Data Nasc.</th>
+                                <th>CPF</th>
+                                <th>Telefone</th>
+                                <th>Ações</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        </div>
+                    </section>
+                </div>
+                <div id="view-cadastrar-cliente" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-user-plus"></i> Cadastrar Novo Cliente e Pets</h2>
+                        <form id="form-cadastrar-cliente-pet" class="dashboard-form">
+                            <h3 class="form-section-title">Dados do Cliente</h3>
+                            <div class="form-group"><label for="cliente-nome">Nome*</label><input type="text" id="cliente-nome" required></div>
+                            <div class="form-group"><label for="cliente-telefone">Telefone</label><input type="tel" id="cliente-telefone" placeholder="(XX) XXXXX-XXXX" maxlength="15"></div>
+                            <div class="form-group"><label for="cliente-email">E-mail</label><input type="email" id="cliente-email"></div>
+                            <div class="form-group"><label for="cliente-cpf">CPF</label><input type="text" id="cliente-cpf"></div>
+                            <div class="form-group"><label for="cliente-endereco">Rua e Número</label><input type="text" id="cliente-endereco" placeholder="Ex: Rua das Flores, 123"></div>
+                            <div class="form-group">
+                                <label for="cliente-bairro">Bairro</label>
+                                <select id="cliente-bairro" required><option value="">Carregando...</option></select>
+                            </div>
+                            <div class="form-divider"></div>
+                            <h3 class="form-section-title">Dados dos Pets</h3>
+                            <div id="pets-container"></div>
+                            <div class="form-group full-width">
+                                <button type="button" id="btn-add-pet" class="btn-secondary"><i class="fas fa-plus-circle"></i> Adicionar Pet</button>
+                            </div>
+                            <div class="form-divider"></div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Salvar Cliente e Pets</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div id="view-listar-clientes" class="view">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-users"></i> Lista de Clientes</h2>
+                            <div class="header-actions">
+                                <button id="btn-exportar-clientes" class="btn-principal" title="Exportar para CSV"><i class="fas fa-file-csv"></i> Exportar</button>
+                                <button id="btn-refresh-clientes" class="btn-secondary" title="Atualizar Lista"><i class="fas fa-sync-alt"></i> Atualizar</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-clientes">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th>Telefone</th>
+                                        <th>Endereço</th>
+                                        <th>Nº de Pets</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-gerenciar-stories" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-history"></i> Gerenciar Stories da Página Inicial</h2>
+                        <form id="form-cadastrar-story" class="dashboard-form">
+                            <div class="form-group full-width">
+                                <label for="story-media">Nova Mídia para o Story (Imagem ou Vídeo)</label>
+                                <input type="file" id="story-media" accept="image/*,video/mp4,video/webm" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Adicionar Story</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-list-ul"></i> Stories Atuais</h2>
+                        <div id="stories-grid-admin" class="stories-grid-admin">
+                            <p>Carregando stories...</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="modal-historico-cliente" class="modal-admin">
+                    <div class="modal-admin-content modal-lg">
+                        <span class="close-modal-admin">&times;</span>
+                        <div class="modal-header">
+                            <h2><i class="fas fa-history"></i> Histórico de <span id="historico-cliente-nome"></span></h2>
+                        </div>
+                        <div id="historico-timeline-container" class="timeline-container">
+                            </div>
+                    </div>
+                </div>
+                
+                <div id="view-gerenciar-racas" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-plus-circle"></i> Cadastrar Nova Raça</h2>
+                        <form id="form-cadastrar-raca" class="dashboard-form">
+                            <div class="form-group"><label for="raca-nome">Nome da Raça</label><input type="text" id="raca-nome" required></div>
+                            <div class="form-group"><button type="submit" class="btn-principal">Salvar Raça</button></div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-list-ul"></i> Raças Cadastradas</h2>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-racas">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>    
+                    </section>
+                </div>
+
+                <div id="view-gerenciar-bairros" class="view">
+                   <section class="dashboard-section">
+                        <h2><i class="fas fa-plus-circle"></i> Cadastrar Novo Bairro</h2>
+                        <form id="form-cadastrar-bairro" class="dashboard-form" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group">
+                                <label for="bairro-nome">Nome do Bairro</label>
+                                <input type="text" id="bairro-nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bairro-valor-tele">Valor Tele-Busca (R$)</label>
+                                <input type="text" id="bairro-valor-tele" placeholder="Ex: 15.00">
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Salvar Bairro</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-list-ul"></i> Bairros Cadastrados</h2>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-bairros">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th>Valor Tele-Busca (R$)</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                    </section>
+                </div>
+
+                <div id="view-cadastrar-produto" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-box"></i> Cadastrar Novo Produto</h2>
+                        <form id="form-cadastrar-produto" class="dashboard-form" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1.5rem 2rem;">
+                            
+                            <h3 class="form-section-title" style="grid-column: 1 / -1;">Dados Principais</h3>
+                            <div class="form-group" style="grid-column: 1 / span 3;"><label for="produto-nome">Nome do Produto*</label><input type="text" id="produto-nome" required></div>
+                            <div class="form-group"><label for="produto-cod-barras">Código de Barras (EAN)</label><input type="text" id="produto-cod-barras"></div>
+                            
+                            <div class="form-group">
+                                <label for="produto-categoria">Categoria*</label>
+                                <select id="produto-categoria" required><option value="">Carregando...</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="produto-fornecedor">Fornecedor Principal</label>
+                                <select id="produto-fornecedor"><option value="">Carregando...</option></select>
+                            </div>
+                            <div class="form-group" style="grid-column: 3 / span 2;"><label for="produto-marca-modelo">Marca / Modelo</label><input type="text" id="produto-marca-modelo"></div>
+                            
+                            <div class="form-group" style="grid-column: 1 / -1;"><label for="produto-descricao">Descrição Detalhada</label><textarea id="produto-descricao" rows="3"></textarea></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label for="produto-imagem">Imagem do Produto</label><input type="file" id="produto-imagem" accept="image/*"></div>
+
+                            <h3 class="form-section-title" style="grid-column: 1 / -1;">Preços e Estoque</h3>
+                            <div class="form-group"><label for="produto-preco-custo">Preço de Custo (R$)</label><input type="text" id="produto-preco-custo"></div>
+                            <div class="form-group"><label for="produto-preco-venda">Preço de Venda (R$)*</label><input type="text" id="produto-preco-venda" required></div>
+                            <div class="form-group"><label for="produto-margem-lucro">Margem de Lucro (%)</label><input type="text" id="produto-margem-lucro" disabled></div>
+                            <div class="form-group"><label for="produto-preco-promocional">Preço Promocional (R$)</label><input type="text" id="produto-preco-promocional"></div>
+
+                            <div class="form-group"><label for="produto-qtd">Estoque Inicial*</label><input type="number" id="produto-qtd" value="0" required></div>
+                            <div class="form-group"><label for="produto-estoque-minimo">Estoque Mínimo</label><input type="number" id="produto-estoque-minimo" value="0"></div>
+                            <div class="form-group"><label for="produto-un-medida">Unidade de Medida</label>
+                                <select id="produto-un-medida">
+                                    <option value="UN">Unidade (UN)</option>
+                                    <option value="CX">Caixa (CX)</option>
+                                    <option value="KG">Quilo (KG)</option>
+                                    <option value="LT">Litro (LT)</option>
+                                    <option value="PC">Peça (PC)</option>
+                                </select>
+                            </div>
+
+                            <h3 class="form-section-title" style="grid-column: 1 / -1;">Dados Técnicos e Fiscais</h3>
+                            <div class="form-group"><label for="produto-peso-kg">Peso (kg)</label><input type="text" id="produto-peso-kg"></div>
+                            <div class="form-group"><label for="produto-alt-cm">Altura (cm)</label><input type="number" id="produto-alt-cm"></div>
+                            <div class="form-group"><label for="produto-larg-cm">Largura (cm)</label><input type="number" id="produto-larg-cm"></div>
+                            <div class="form-group"><label for="produto-comp-cm">Comprimento (cm)</label><input type="number" id="produto-comp-cm"></div>
+                            
+                            <div class="form-group"><label for="produto-ncm">NCM</label><input type="text" id="produto-ncm"></div>
+                            <div class="form-group"><label for="produto-cest">CEST</label><input type="text" id="produto-cest"></div>
+                            <div class="form-group"><label for="produto-cfop">CFOP</label><input type="text" id="produto-cfop"></div>
+                            <div class="form-group"><label for="produto-origem">Origem</label>
+                                <select id="produto-origem">
+                                    <option value="Nacional">Nacional</option>
+                                    <option value="Importado">Importado</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label for="produto-cst-csosn">CST/CSOSN</label><input type="text" id="produto-cst-csosn"></div>
+                            <div class="form-group"><label for="produto-pis-cofins">PIS/COFINS</label><input type="text" id="produto-pis-cofins"></div>
+                            
+                            <h3 class="form-section-title" style="grid-column: 1 / -1;">Opções</h3>
+                            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="produto-ativo" checked style="width: auto;">
+                                <label for="produto-ativo" style="margin-bottom: 0;">Produto Ativo</label>
+                            </div>
+                            <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="produto-pdv" checked style="width: auto;">
+                                <label for="produto-pdv" style="margin-bottom: 0;">Comercializável no PDV</label>
+                            </div>
+                             <div class="form-group"><label for="produto-comissao">Comissão (R$)</label><input type="text" id="produto-comissao"></div>
+
+                            <div class="form-group" style="grid-column: 1 / -1; margin-top: 1.5rem;">
+                                <button type="submit" class="btn-principal">Salvar Produto</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div id="view-cadastrar-servico" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-plus-circle"></i> Cadastrar Novo Serviço</h2>
+                        <form id="form-cadastrar-servico" class="dashboard-form" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group full-width">
+                                <label for="servico-nome">Nome do Serviço</label>
+                                <input type="text" id="servico-nome" required>
+                            </div>
+                
+                            <div class="form-group">
+                                <label for="servico-tipo">Tipo de Serviço</label>
+                                <select id="servico-tipo" name="servico_tipo">
+                                    <option value="principal">Principal</option>
+                                    <option value="adicional">Adicional</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="servico-valor">Valor de Venda (R$)</label>
+                                <input type="text" id="servico-valor" placeholder="Ex: 70,00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="servico-duracao">Duração Média (minutos)</label>
+                                <input type="number" id="servico-duracao" placeholder="Ex: 60">
+                            </div>
+                
+                            <div class="form-group full-width">
+                                <label for="servico-descricao">Descrição (visível para o cliente)</label>
+                                <textarea id="servico-descricao" rows="4"></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="servico-fotos">Fotos do Serviço (até 3 imagens)</label>
+                                <input type="file" id="servico-fotos" accept="image/*" multiple>
+                                <div id="servico-fotos-preview" class="preview-container"></div>
+                            </div>
+                            <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="servico-mostrar-site" style="width: auto;">
+                                <label for="servico-mostrar-site" style="margin-bottom: 0;"><strong>Mostrar este serviço na página pública?</strong></label>
+                            </div>
+                
+                            <div class="form-divider full-width"></div>
+                            <h3 class="form-section-title full-width">Produtos Utilizados no Serviço</h3>
+                
+                            <div class="form-group">
+                                <label for="servico-custo-total">Custo Total dos Produtos (R$)</label>
+                                <input type="text" id="servico-custo-total" value="0.00" disabled style="font-weight: bold; color: #dc3545;">
+                            </div>
+                            <div class="form-group">
+                                <label for="produto-select">Adicionar Produto</label>
+                                <select id="produto-select">
+                                    <option value="">Selecione um produto</option>
+                                </select>
+                            </div>
+                            
+                            <div class="table-wrapper full-width">
+                                <table class="dashboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Custo Unit.</th>
+                                            <th>Qtd. Utilizada</th>
+                                            <th>Subtotal Custo</th>
+                                            <th class="actions-cell-header">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="produtos-utilizados-tbody"></tbody>
+                                </table>
+                            </div>
+                
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Salvar Serviço</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div id="view-gerenciar-pagamentos" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-credit-card"></i> Cadastrar Nova Forma de Pagamento</h2>
+                        <form id="form-cadastrar-pagamento" class="dashboard-form">
+                            <div class="form-group">
+                                <label for="pagamento-nome">Nome da Forma de Pagamento</label>
+                                <input type="text" id="pagamento-nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pagamento-taxa">Taxa (%)</label>
+                                <input type="text" id="pagamento-taxa" placeholder="Ex: 4.98" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn-principal">Salvar Forma de Pagamento</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-list-ul"></i> Formas de Pagamento Cadastradas</h2>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-pagamentos">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Taxa (%)</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>    
+                    </section>
+                </div>
+
+                <div id="modal-editar-pagamento" class="modal-admin">
+                    <div class="modal-admin-content">
+                        <span class="close-modal-admin">&times;</span>
+                        <h2><i class="fas fa-edit"></i> Editar Forma de Pagamento</h2>
+                        <form id="form-editar-pagamento" class="dashboard-form" style="grid-template-columns: 1fr;">
+                            <input type="hidden" id="edit-pagamento-id">
+                            <div class="form-group">
+                                <label for="edit-pagamento-nome">Nome</label>
+                                <input type="text" id="edit-pagamento-nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-pagamento-taxa">Taxa (%)</label>
+                                <input type="text" id="edit-pagamento-taxa" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Salvar Alterações</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal: editar serviços -->
+                <div id="edit-service-modal" class="modal-admin">
+                    <div class="modal-admin-content modal-lg">
+                        <span class="close-modal-admin" id="close-edit-service-modal">&times;</span>
+                        <h2><i class="fas fa-edit"></i> Editar Serviço</h2>
+                        <form id="form-editar-servico" class="dashboard-form" style="grid-template-columns: 1fr 1fr;">
+                            <input type="hidden" id="edit-servico-id">
+
+                            <div class="form-group full-width">
+                                <label for="edit-servico-nome">Nome do Serviço</label>
+                                <input type="text" id="edit-servico-nome" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-servico-tipo">Tipo de Serviço</label>
+                                <select id="edit-servico-tipo" name="edit_servico_tipo">
+                                    <option value="principal">Principal</option>
+                                    <option value="adicional">Adicional</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-servico-valor">Valor de Venda (R$)</label>
+                                <input type="text" id="edit-servico-valor" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-servico-duracao">Duração Média (minutos)</label>
+                                <input type="number" id="edit-servico-duracao">
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="edit-servico-descricao">Descrição</label>
+                                <textarea id="edit-servico-descricao" rows="4"></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Fotos Atuais</label>
+                                <div id="edit-servico-fotos-preview" class="fotos-preview-container"></div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="edit-servico-fotos">Adicionar/Substituir Fotos (até 3)</label>
+                                <input type="file" id="edit-servico-fotos" accept="image/*" multiple>
+                            </div>
+                            <div class="form-group full-width" style="flex-direction: row; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="edit-servico-mostrar-site" style="width: auto;">
+                                <label for="edit-servico-mostrar-site" style="margin-bottom: 0;"><strong>Mostrar este serviço na página pública?</strong></label>
+                            </div>
+                            <div class="form-divider full-width"></div>
+                            <h3 class="form-section-title full-width">Produtos Utilizados no Serviço</h3>
+                            
+                            <div class="form-group">
+                                <label for="edit-servico-custo-total">Custo Total dos Produtos (R$)</label>
+                                <input type="text" id="edit-servico-custo-total" disabled style="font-weight: bold; color: #dc3545;">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-produto-select">Adicionar Produto</label>
+                                <select id="edit-produto-select">
+                                    <option value="">Selecione um produto</option>
+                                </select>
+                            </div>
+
+                            <div class="table-wrapper full-width">
+                                <table class="dashboard-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Custo Unit.</th>
+                                            <th>Qtd. Utilizada</th>
+                                            <th>Subtotal Custo</th>
+                                            <th class="actions-cell-header">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="edit-produtos-utilizados-tbody"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="form-divider full-width"></div>
+
+                            <div id="container-adicionais" class="full-width" style="display: none;"> <h3 class="form-section-title">Serviços Adicionais Associados</h3>
+                                <div class="form-group">
+                                    <label for="edit-servico-adicional-select">Adicionar Serviço Adicional</label>
+                                    <select id="edit-servico-adicional-select">
+                                        <option value="">Selecione um adicional...</option>
+                                    </select>
+                                </div>
+                                <div id="edit-servicos-adicionais-list" class="items-list-container">
+                                    </div>
+                            </div>
+
+                            <div class="form-group full-width" style="margin-top: 1.5rem;">
+                                <button type="submit" class="btn-principal">Salvar Alterações</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="view-listar-servicos" class="view">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-list-ul"></i> Serviços Cadastrados</h2>
+                            <div class="header-actions">
+                                <button id="btn-refresh-servicos" class="btn-secondary" title="Atualizar Lista"><i class="fas fa-sync-alt"></i> Atualizar</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-servicos">
+                                <thead>
+                                    <tr>
+                                        <th>Foto</th> 
+                                        <th>Código</th>
+                                        <th>Nome do Serviço</th>
+                                        <th>Tipo</th>
+                                        <th>Valor Venda (R$)</th>
+                                        <th>Custo Prod. (R$)</th>
+                                        <th>Lucro Est. (R$)</th>
+                                        <th>Duração (min)</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-agendamentos" class="view">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-calendar-alt"></i> Agendamentos</h2>
+                            <div class="header-actions">
+                                <button id="btn-novo-agendamento" class="btn-principal">
+                                    <i class="fas fa-plus"></i> Novo Agendamento
+                                </button>
+                            </div>
+                        </div>
+
+                        <form id="form-filtros-agenda" class="dashboard-form relatorio-filtros" style="margin-bottom: 2rem;">
+                            <div class="form-group">
+                                <label for="agenda-periodo">Período</label>
+                                <select id="agenda-periodo">
+                                    <option value="hoje">Hoje</option>
+                                    <option value="semana" selected>Esta Semana</option>
+                                    <option value="mes">Este Mês</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="agenda-data-inicio">Data Início</label>
+                                <input type="date" id="agenda-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="agenda-data-fim">Data Fim</label>
+                                <input type="date" id="agenda-data-fim" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="agenda-status">Status</label>
+                                <select id="agenda-status">
+                                    <option value="todos">Todos (Exceto Cancelado)</option>
+                                    <option value="Agendado">Agendado</option>
+                                    <option value="Realizado">Realizado</option>
+                                    <option value="Faltou">Faltou</option>
+                                    <option value="cancelado">Cancelado</option>
+                                    <option value="pendente">Pendente</option>
+                                </select>
+                            </div>
+                        </form>
+                        <div class="table-wrapper">
+                        <table class="dashboard-table" id="tabela-agendamentos">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Data & Hora</th>
+                                    <th>Cliente</th>
+                                    <th>Pets</th>
+                                    <th>Total (R$)</th>
+                                    <th class="actions-cell-header">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-gerenciar-categorias" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-sitemap"></i> Cadastrar Nova Categoria</h2>
+                        <form id="form-cadastrar-categoria" class="dashboard-form">
+                            <div class="form-group"><label for="categoria-nome">Nome da Categoria</label><input type="text" id="categoria-nome" required></div>
+                            <div class="form-group"><button type="submit" class="btn-principal">Salvar Categoria</button></div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-list-ul"></i> Categorias Cadastradas</h2>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-categorias">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-listar-fornecedores" class="view">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-truck"></i> Fornecedores Cadastrados</h2>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-fornecedores">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th>Telefone</th>
+                                        <th>E-mail</th>
+                                        <th>CNPJ</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-cadastrar-fornecedor" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-truck"></i> Cadastrar Novo Fornecedor</h2>
+                        <form id="form-cadastrar-fornecedor" class="dashboard-form">
+                            <div class="form-group full-width">
+                                <label for="fornecedor-nome">Nome do Fornecedor*</label>
+                                <input type="text" id="fornecedor-nome" required>
+                            </div>
+                            <div class="form-group"><label for="fornecedor-cnpj">CNPJ</label><input type="text" id="fornecedor-cnpj"></div>
+                            <div class="form-group"><label for="fornecedor-email">E-mail</label><input type="email" id="fornecedor-email"></div>
+                            <div class="form-group"><label for="fornecedor-telefone">Telefone</label><input type="tel" id="fornecedor-telefone"></div>
+                            <div class="form-group"><label for="fornecedor-endereco">Endereço</label><input type="text" id="fornecedor-endereco"></div>
+                            <div class="form-group full-width" style="margin-top: 1rem;">
+                                <button type="submit" class="btn-principal">Salvar Fornecedor</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+
+                <div id="view-listar-produtos" class="view">
+                     <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-box-open"></i> Produtos Cadastrados</h2>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-produtos">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Imagem</th>
+                                        <th>Nome</th>
+                                        <th>Categoria</th>
+                                        <th>Preço Venda</th>
+                                        <th>Estoque</th>
+                                        <th>Status</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-gerenciar-adocao" class="view">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-heart"></i> Gerenciar Anúncios de Adoção</h2>
+                            <div class="header-actions">
+                                <button id="btn-refresh-adocao" class="btn-secondary" title="Atualizar Lista"><i class="fas fa-sync-alt"></i> Atualizar</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-adocao">
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Pet</th>
+                                        <th>Tutor</th>
+                                        <th>Telefone</th>
+                                        <th>Cidade</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-op-agendamentos" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-calendar-day"></i> Agendamentos por Período</h2>
+                        <form id="form-filtro-agendamentos-periodo" class="dashboard-form relatorio-filtros">
+                            <div class="form-group">
+                                <label for="agendamentos-periodo-periodo">Período</label>
+                                <select id="agendamentos-periodo-periodo">
+                                    <option value="hoje">Hoje</option>
+                                    <option value="semana" selected>Esta Semana</option>
+                                    <option value="mes">Este Mês</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="agendamentos-periodo-data-inicio">Data Início</label>
+                                <input type="date" id="agendamentos-periodo-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="agendamentos-periodo-data-fim">Data Fim</label>
+                                <input type="date" id="agendamentos-periodo-data-fim" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="agendamentos-periodo-status">Status</label>
+                                <select id="agendamentos-periodo-status">
+                                    <option value="todos">Todos (exceto cancelado)</option>
+                                    <option value="Agendado">Agendado</option>
+                                    <option value="Realizado">Realizado</option>
+                                    <option value="Faltou">Faltou</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-agendamentos-periodo">
+                            <p>Selecione os filtros e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-op-servicos-mais-realizados" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-chart-pie"></i> Serviços Mais Realizados</h2>
+                        <form id="form-filtro-servicos-mais-realizados" class="dashboard-form relatorio-filtros">
+                            <div class="form-group">
+                                <label for="servicos-mais-realizados-periodo">Período</label>
+                                <select id="servicos-mais-realizados-periodo">
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="servicos-mais-realizados-data-inicio">Data Início</label>
+                                <input type="date" id="servicos-mais-realizados-data-inicio" disabled>
+                            </div>
+                             <div class="form-group">
+                                <label for="servicos-mais-realizados-data-fim">Data Fim</label>
+                                <input type="date" id="servicos-mais-realizados-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-servicos-mais-realizados">
+                            <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-op-taxa-comparecimento" class="view">
+                     <section class="dashboard-section">
+                        <h2><i class="fas fa-user-check"></i> Taxa de Comparecimento</h2>
+                        <form id="form-filtro-taxa-comparecimento" class="dashboard-form relatorio-filtros">
+                             <div class="form-group">
+                                <label for="taxa-comparecimento-periodo">Período</label>
+                                <select id="taxa-comparecimento-periodo">
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                             <div class="form-group">
+                                <label for="taxa-comparecimento-data-inicio">Data Início</label>
+                                <input type="date" id="taxa-comparecimento-data-inicio" disabled>
+                            </div>
+                             <div class="form-group">
+                                <label for="taxa-comparecimento-data-fim">Data Fim</label>
+                                <input type="date" id="taxa-comparecimento-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-taxa-comparecimento">
+                           <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-tempo-medio-servico" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-clock"></i> Tempo Médio por Serviço</h2>
+                        <form id="form-filtro-tempo-medio-servico" class="dashboard-form relatorio-filtros">
+                            <div class="form-group">
+                                <label for="tempo-medio-periodo">Período</label>
+                                <select id="tempo-medio-periodo">
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="tempo-medio-data-inicio">Data Início</label>
+                                <input type="date" id="tempo-medio-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="tempo-medio-data-fim">Data Fim</label>
+                                <input type="date" id="tempo-medio-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-tempo-medio-servico">
+                            <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-fin-faturamento-servico" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-hand-holding-usd"></i> Faturamento por Serviço</h2>
+                        <form id="form-filtro-faturamento-servico" class="dashboard-form relatorio-filtros">
+                            <div class="form-group">
+                                <label for="faturamento-servico-periodo">Período</label>
+                                <select id="faturamento-servico-periodo">
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="faturamento-servico-data-inicio">Data Início</label>
+                                <input type="date" id="faturamento-servico-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="faturamento-servico-data-fim">Data Fim</label>
+                                <input type="date" id="faturamento-servico-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-faturamento-servico">
+                            <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-fin-ticket-medio" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-user-tag"></i> Ticket Médio por Visita</h2>
+                        <form id="form-filtro-ticket-medio" class="dashboard-form relatorio-filtros">
+                             <div class="form-group">
+                                <label for="ticket-medio-periodo">Período</label>
+                                <select id="ticket-medio-periodo">
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ticket-medio-data-inicio">Data Início</label>
+                                <input type="date" id="ticket-medio-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="ticket-medio-data-fim">Data Fim</label>
+                                <input type="date" id="ticket-medio-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-ticket-medio">
+                           <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-fin-receitas-periodo" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-cash-register"></i> Receitas por Período</h2>
+                        <form id="form-filtro-receitas-periodo" class="dashboard-form relatorio-filtros">
+                             <div class="form-group">
+                                <label for="receitas-periodo-periodo">Período</label>
+                                <select id="receitas-periodo-periodo">
+                                    <option value="hoje">Hoje</option>
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="receitas-periodo-data-inicio">Data Início</label>
+                                <input type="date" id="receitas-periodo-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="receitas-periodo-data-fim">Data Fim</label>
+                                <input type="date" id="receitas-periodo-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-receitas-periodo">
+                            <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+                
+                <div id="view-rel-cli-historico-pet" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-history"></i> Histórico de Serviços por Pet</h2>
+                        <form id="form-filtro-historico-pet" class="dashboard-form relatorio-filtros" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group">
+                                <label for="historico-selecionar-cliente">Selecione o Cliente</label>
+                                <select id="historico-selecionar-cliente">
+                                    <option value="">Carregando clientes...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="historico-selecionar-pet">Selecione o Pet</label>
+                                <select id="historico-selecionar-pet" disabled>
+                                    <option value="">Primeiro, selecione um cliente</option>
+                                </select>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-historico-pet">
+                            <p>Selecione um cliente e um pet para ver o histórico de serviços.</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-cli-mais-frequentes" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-medal"></i> Clientes Mais Frequentes (Ranking)</h2>
+                        <form id="form-filtro-clientes-frequentes" class="dashboard-form relatorio-filtros">
+                            <div class="form-group">
+                                <label for="clientes-frequentes-periodo">Período</label>
+                                <select id="clientes-frequentes-periodo">
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientes-frequentes-data-inicio">Data Início</label>
+                                <input type="date" id="clientes-frequentes-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientes-frequentes-data-fim">Data Fim</label>
+                                <input type="date" id="clientes-frequentes-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-clientes-frequentes">
+                            <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-cli-novos-clientes" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-user-plus"></i> Novos Clientes por Período</h2>
+                        <form id="form-filtro-novos-clientes" class="dashboard-form relatorio-filtros">
+                             <div class="form-group">
+                                <label for="novos-clientes-periodo">Período</label>
+                                <select id="novos-clientes-periodo">
+                                    <option value="hoje">Hoje</option>
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="novos-clientes-data-inicio">Data Início</label>
+                                <input type="date" id="novos-clientes-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="novos-clientes-data-fim">Data Fim</label>
+                                <input type="date" id="novos-clientes-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-novos-clientes">
+                           <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-est-consumo-servico" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-dolly-flatbed"></i> Consumo de Insumos por Serviço</h2>
+                        <form id="form-filtro-consumo-servico" class="dashboard-form relatorio-filtros">
+                            <div class="form-group">
+                                <label for="consumo-servico-periodo">Período</label>
+                                <select id="consumo-servico-periodo">
+                                    <option value="semana">Esta Semana</option>
+                                    <option value="mes" selected>Este Mês</option>
+                                    <option value="trimestre">Este Trimestre</option>
+                                    <option value="personalizado">Personalizado</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="consumo-servico-data-inicio">Data Início</label>
+                                <input type="date" id="consumo-servico-data-inicio" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="consumo-servico-data-fim">Data Fim</label>
+                                <input type="date" id="consumo-servico-data-fim" disabled>
+                            </div>
+                            <div class="form-group full-width">
+                                <button type="submit" class="btn-principal">Gerar Relatório</button>
+                            </div>
+                        </form>
+                    </section>
+                    <section class="dashboard-section">
+                        <div id="resultado-consumo-servico">
+                            <p>Selecione o período e clique em "Gerar Relatório".</p>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-rel-est-reposicao" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-exclamation-triangle"></i> Alerta de Reposição de Estoque</h2>
+                        <div id="resultado-reposicao">
+                           <p>Carregando dados de estoque...</p>
+                        </div>
+                    </section>
+                </div>
+                
+                <div id="view-rel-est-reposicao" class="view">
+                    <section class="dashboard-section"><h2><i class="fas fa-box-open"></i> Reposição Necessária</h2><p>Em breve...</p></section>
+                </div>
+
+                <div id="view-gerenciar-horarios" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-clock"></i> Gerenciar Horários de Atendimento</h2>
+                        <p>Defina aqui os horários de funcionamento padrão para cada dia da semana. Estes horários serão usados para mostrar a disponibilidade na página de agendamento do site.</p>
+                        <form id="form-gerenciar-horarios" class="dashboard-form" style="grid-template-columns: 1fr; gap: 2rem;">
+                            </form>
+                        <div class="form-group full-width" style="margin-top: 2rem;">
+                            <button type="submit" form="form-gerenciar-horarios" class="btn-principal">Salvar Alterações nos Horários</button>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="view-clientes-pendentes" class="view">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2><i class="fas fa-user-clock"></i> Clientes Aguardando Aprovação</h2>
+                            <div class="header-actions">
+                                <button id="btn-refresh-clientes-pendentes" class="btn-secondary" title="Atualizar Lista"><i class="fas fa-sync-alt"></i> Atualizar</button>                            
+                            </div>
+                        </div>
+                        <p>Abaixo estão os novos clientes que se cadastraram pelo site. Aprove ou rejeite o cadastro. Ao aprovar, o cliente se tornará "ativo" e seus agendamentos poderão ser confirmados.</p>
+                        <div class="table-wrapper">
+                            <table class="dashboard-table" id="tabela-clientes-pendentes">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Telefone</th>
+                                        <th>E-mail</th>
+                                        <th>Endereço</th>
+                                        <th class="actions-cell-header">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                
+                <div id="view-backup" class="view">
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-download"></i> Exportar Dados (Fazer Backup)</h2>
+                        <p>Selecione as tabelas das quais deseja fazer backup. Um único arquivo JSON será gerado com todos os dados selecionados.</p>
+                        
+                        <form id="form-exportar-backup">
+                            <div class="backup-checkbox-grid">
+                                <div class="checkbox-item"><input type="checkbox" id="backup-todos" class="backup-tabela-checkbox-master"><label for="backup-todos"><strong>Selecionar Tudo</strong></label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-clientes" class="backup-tabela-checkbox" value="clientes"><label for="backup-clientes">Clientes</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-pets" class="backup-tabela-checkbox" value="pets"><label for="backup-pets">Pets</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-agendamentos" class="backup-tabela-checkbox" value="agendamentos"><label for="backup-agendamentos">Agendamentos</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-servicos" class="backup-tabela-checkbox" value="servicos"><label for="backup-servicos">Serviços</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-produtos" class="backup-tabela-checkbox" value="produtos"><label for="backup-produtos">Produtos</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-fornecedores" class="backup-tabela-checkbox" value="fornecedores"><label for="backup-fornecedores">Fornecedores</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-bairros" class="backup-tabela-checkbox" value="bairros"><label for="backup-bairros">Bairros</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-racas" class="backup-tabela-checkbox" value="racas"><label for="backup-racas">Raças</label></div>
+                                <div class="checkbox-item"><input type="checkbox" id="backup-formas_pagamento" class="backup-tabela-checkbox" value="formas_pagamento"><label for="backup-formas_pagamento">Formas de Pagamento</label></div>
+                                </div>
+                            <div class="form-group full-width" style="margin-top: 1.5rem;">
+                                <button type="submit" class="btn-principal"><i class="fas fa-file-export"></i> Gerar e Baixar Backup</button>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="dashboard-section">
+                        <h2><i class="fas fa-upload"></i> Importar Dados (Restaurar Backup)</h2>
+                        <div class="info-box" style="background-color: #fff1f2; border-left-color: #ef4444; margin-bottom: 2rem;">
+                            <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+                            <div>
+                                <p><strong>ATENÇÃO: A importação é uma ação destrutiva!</strong></p>
+                                <ul>
+                                    <li>Ao importar, todos os dados <strong>EXISTENTES</strong> das tabelas contidas no arquivo de backup serão <strong>APAGADOS</strong> antes da restauração.</li>
+                                    <li>Use esta função apenas para restaurar o sistema a um estado anterior. <strong>Esta ação não pode ser desfeita.</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <form id="form-importar-backup" class="dashboard-form" style="grid-template-columns: 1fr;">
+                            <div class="form-group">
+                                <label for="arquivo-backup">Selecione o arquivo de Backup (.json)</label>
+                                <input type="file" id="arquivo-backup" accept=".json" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn-delete" style="background-color: #dc3545; color: white;"><i class="fas fa-hdd"></i> Importar e Substituir Dados</button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </main>
+    
+    <div id="edit-client-modal" class="modal-admin">
+        <div class="modal-admin-content modal-lg">
+            <span class="close-modal-admin">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Cliente e Pets</h2>
+            
+            <form id="form-editar-cliente" class="dashboard-form">
+                <input type="hidden" id="edit-cliente-id">
+                <h3 class="form-section-title">Dados do Cliente</h3>
+                <div class="form-group full-width"><label for="edit-cliente-nome">Nome*</label><input type="text" id="edit-cliente-nome" required></div>
+                <div class="form-group"><label for="edit-cliente-telefone">Telefone</label><input type="tel" id="edit-cliente-telefone" maxlength="15"></div>
+                <div class="form-group"><label for="edit-cliente-email">E-mail</label><input type="email" id="edit-cliente-email"></div>
+                <div class="form-group"><label for="edit-cliente-cpf">CPF</label><input type="text" id="edit-cliente-cpf"></div>
+                <div class="form-group"><label for="edit-cliente-endereco">Endereço</label><input type="text" id="edit-cliente-endereco"></div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-principal">Salvar Alterações do Cliente</button>
+                </div>
+            </form>
+
+            <div class="form-divider"></div>
+
+            <h3 class="form-section-title">Pets do Cliente</h3>
+            <div id="edit-pets-container">
+                </div>
+
+            <div class="form-group full-width" style="margin-top: 20px;">
+                <button type="button" id="btn-add-pet-no-modal" class="btn-secondary"><i class="fas fa-plus-circle"></i> Adicionar Novo Pet</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-pets-modal" class="modal-admin">
+        <div class="modal-admin-content modal-lg">
+            <span id="close-view-pets-modal" class="close-modal-admin">&times;</span>
+            <h2>Pets de <span id="pets-modal-owner-name"></span></h2>
+            <div id="pets-modal-body" class="pets-grid">
+                </div>
+        </div>
+    </div>
+
+    <!-- Modal: Criar Usuário -->
+    <div id="modal-criar-usuario" class="modal">
+        <div class="modal-content">
+            <span id="close-modal-criar-usuario" class="close-modal-admin">&times;</span>
+            <h2>Criar Novo Usuário</h2>
+            <form id="form-criar-usuario" class="dashboard-form">
+                <div class="form-group full-width">
+                    <label for="novo-usuario-nome">Nome Completo*</label>
+                    <input type="text" id="novo-usuario-nome" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="novo-usuario-nome-usuario">Nome de Usuário*</label>
+                    <input type="text" id="novo-usuario-nome-usuario" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="novo-usuario-email">E-mail*</label>
+                    <input type="email" id="novo-usuario-email" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="novo-usuario-senha">Senha*</label>
+                    <input type="password" id="novo-usuario-senha" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="novo-usuario-nascimento">Data de Nascimento*</label>
+                    <input type="date" id="novo-usuario-nascimento" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="novo-usuario-cpf">CPF*</label>
+                    <input type="text" id="novo-usuario-cpf" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="novo-usuario-telefone">Telefone*</label>
+                    <input type="text" id="novo-usuario-telefone" required>
+                </div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-principal">Criar Usuário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Usuário -->
+    <div id="modal-editar-usuario" class="modal-admin">
+        <div class="modal-admin-content">
+            <span id="close-modal-editar-usuario" class="close-modal-admin">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Usuário</h2>
+            <form id="form-editar-usuario" class="dashboard-form">
+                <input type="hidden" id="editar-usuario-id">
+                <div class="form-group full-width">
+                    <label for="editar-usuario-nome">Nome Completo*</label>
+                    <input type="text" id="editar-usuario-nome" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="editar-usuario-nome-usuario">Nome de Usuário*</label>
+                    <input type="text" id="editar-usuario-nome-usuario" required disabled>
+                </div>
+                <div class="form-group full-width">
+                    <label for="editar-usuario-email">E-mail*</label>
+                    <input type="email" id="editar-usuario-email" required>
+                </div>
+                <div class="form-group"><label for="editar-usuario-nascimento">Data de Nascimento*</label><input type="date" id="editar-usuario-nascimento" required></div>
+                <div class="form-group"><label for="editar-usuario-cpf">CPF*</label><input type="text" id="editar-usuario-cpf" required></div>
+                <div class="form-group full-width"><label for="editar-usuario-telefone">Telefone*</label><input type="text" id="editar-usuario-telefone" required></div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-principal">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Produto -->
+    <div id="modal-editar-produto" class="modal-admin">
+        <div class="modal-admin-content modal-lg">
+            <span class="close-modal-admin" id="close-modal-editar-produto">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Produto</h2>
+            
+            <form id="form-editar-produto" class="dashboard-form" style="grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1.5rem 2rem;">
+                <input type="hidden" id="edit-produto-id">
+                <input type="hidden" id="edit-produto-imagem-url-atual">
+
+                <h3 class="form-section-title" style="grid-column: 1 / -1;">Dados Principais</h3>
+                <div class="form-group" style="grid-column: 1 / -1; text-align: center;">
+                    <img src="images/default-product.png" id="edit-produto-imagem-preview" alt="Preview da Imagem" style="max-width: 150px; max-height: 150px; border-radius: 8px; object-fit: cover; margin-bottom: 10px;">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;"><label for="edit-produto-imagem">Alterar Imagem do Produto</label><input type="file" id="edit-produto-imagem" accept="image/*"></div>
+
+                <div class="form-group" style="grid-column: 1 / span 3;"><label for="edit-produto-nome">Nome do Produto*</label><input type="text" id="edit-produto-nome" required></div>
+                <div class="form-group"><label for="edit-produto-cod-barras">Código de Barras (EAN)</label><input type="text" id="edit-produto-cod-barras"></div>
+                
+                <div class="form-group">
+                    <label for="edit-produto-categoria">Categoria*</label>
+                    <select id="edit-produto-categoria" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-produto-fornecedor">Fornecedor Principal</label>
+                    <select id="edit-produto-fornecedor"></select>
+                </div>
+                <div class="form-group" style="grid-column: 3 / span 2;"><label for="edit-produto-marca-modelo">Marca / Modelo</label><input type="text" id="edit-produto-marca-modelo"></div>
+                
+                <div class="form-group" style="grid-column: 1 / -1;"><label for="edit-produto-descricao">Descrição Detalhada</label><textarea id="edit-produto-descricao" rows="3"></textarea></div>
+
+                <h3 class="form-section-title" style="grid-column: 1 / -1;">Preços e Estoque</h3>
+                <div class="form-group"><label for="edit-produto-preco-custo">Preço de Custo (R$)</label><input type="text" id="edit-produto-preco-custo"></div>
+                <div class="form-group"><label for="edit-produto-preco-venda">Preço de Venda (R$)*</label><input type="text" id="edit-produto-preco-venda" required></div>
+                <div class="form-group"><label for="edit-produto-preco-promocional">Preço Promocional (R$)</label><input type="text" id="edit-produto-preco-promocional"></div>
+                <div class="form-group"><label for="edit-produto-margem-lucro">Margem de Lucro (%)</label><input type="text" id="edit-produto-margem-lucro" disabled></div>
+
+                <div class="form-group"><label for="edit-produto-qtd">Estoque*</label><input type="number" id="edit-produto-qtd" value="0" required></div>
+                <div class="form-group"><label for="edit-produto-estoque-minimo">Estoque Mínimo</label><input type="number" id="edit-produto-estoque-minimo" value="0"></div>
+                
+                <h3 class="form-section-title" style="grid-column: 1 / -1;">Opções</h3>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="edit-produto-ativo" checked style="width: auto;">
+                    <label for="edit-produto-ativo" style="margin-bottom: 0;">Produto Ativo</label>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                    <input type="checkbox" id="edit-produto-pdv" checked style="width: auto;">
+                    <label for="edit-produto-pdv" style="margin-bottom: 0;">Comercializável no PDV</label>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1; margin-top: 1.5rem;">
+                    <button type="submit" class="btn-principal">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal editar bairro -->
+    <div id="modal-editar-bairro" class="modal-admin">
+        <div class="modal-admin-content">
+            <span class="close-modal-admin">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Bairro</h2>
+            <form id="form-editar-bairro" class="dashboard-form" style="grid-template-columns: 1fr 1fr;">
+                <input type="hidden" id="edit-bairro-id">
+                <div class="form-group">
+                    <label for="edit-bairro-nome">Nome do Bairro</label>
+                    <input type="text" id="edit-bairro-nome" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-bairro-valor-tele">Valor Tele-Busca (R$)</label>
+                    <input type="text" id="edit-bairro-valor-tele" placeholder="Ex: 15.00">
+                </div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-principal">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal editar categoria -->
+    <div id="modal-editar-categoria" class="modal-admin">
+        <div class="modal-admin-content">
+            <span class="close-modal-admin">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Categoria</h2>
+            <form id="form-editar-categoria" class="dashboard-form" style="grid-template-columns: 1fr;">
+                <input type="hidden" id="edit-categoria-id">
+                <div class="form-group">
+                    <label for="edit-categoria-nome">Nome da Categoria</label>
+                    <input type="text" id="edit-categoria-nome" required>
+                </div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-principal">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal editar fornecedor -->
+    <div id="modal-editar-fornecedor" class="modal-admin">
+        <div class="modal-admin-content modal-lg">
+            <span class="close-modal-admin">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Fornecedor</h2>
+            <form id="form-editar-fornecedor" class="dashboard-form">
+                <input type="hidden" id="edit-fornecedor-id">
+                <div class="form-group full-width">
+                    <label for="edit-fornecedor-nome">Nome do Fornecedor*</label>
+                    <input type="text" id="edit-fornecedor-nome" required>
+                </div>
+                <div class="form-group"><label for="edit-fornecedor-cnpj">CNPJ</label><input type="text" id="edit-fornecedor-cnpj"></div>
+                <div class="form-group"><label for="edit-fornecedor-email">E-mail</label><input type="email" id="edit-fornecedor-email"></div>
+                <div class="form-group"><label for="edit-fornecedor-telefone">Telefone</label><input type="tel" id="edit-fornecedor-telefone"></div>
+                <div class="form-group"><label for="edit-fornecedor-endereco">Endereço</label><input type="text" id="edit-fornecedor-endereco"></div>
+                <div class="form-group full-width" style="margin-top: 1rem;">
+                    <button type="submit" class="btn-principal">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal editar raça -->
+    <div id="modal-editar-raca" class="modal-admin">
+        <div class="modal-admin-content">
+            <span class="close-modal-admin">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Raça</h2>
+            <form id="form-editar-raca" class="dashboard-form" style="grid-template-columns: 1fr;">
+                <input type="hidden" id="edit-raca-id">
+                <div class="form-group">
+                    <label for="edit-raca-nome">Nome da Raça</label>
+                    <input type="text" id="edit-raca-nome" required>
+                </div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-principal">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal agendamento -->
+    <div id="modal-agendamento" class="modal-admin">
+        <div class="modal-admin-content modal-lg">
+            <span class="close-modal-admin">&times;</span>
+            <div class="modal-header">
+                <h2 id="modal-agendamento-titulo"><i class="fas fa-calendar-plus"></i> Novo Agendamento</h2>
+                <button type="button" id="btn-imprimir-agendamento" class="btn-secondary" style="display: none;"><i class="fas fa-print"></i> Imprimir</button>
+            </div>
+            
+            <form id="form-agendamento" class="dashboard-form" style="grid-template-columns: repeat(3, 1fr); gap: 1rem 1.5rem;">
+                <input type="hidden" id="agendamento-id">
+
+                <div class="form-group" style="grid-column: 1 / span 2;">
+                    <label for="agendamento-cliente">Cliente*</label>
+                    <select id="agendamento-cliente" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Valor Total (R$)</label>
+                    <input type="text" id="agendamento-valor-total" value="0.00" disabled style="font-weight: bold; font-size: 1.2rem; color: #10b981;">
+                </div>
+
+                <div class="form-group">
+                    <label for="agendamento-pagamento">Forma de Pagamento</label>
+                    <select id="agendamento-pagamento">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column: 1 / span 2;">
+
+                <div class="form-divider" style="grid-column: 1 / -1;"></div>
+
+                <h3 class="form-section-title" style="grid-column: 1 / -1;">Pets e Serviços</h3>
+                <div id="pets-e-servicos-container" class="full-width" style="grid-column: 1 / -1;">
+                    <p class="placeholder-text">Selecione um cliente para adicionar pets ao atendimento.</p>
+                </div>
+                
+                <div class="form-divider" style="grid-column: 1 / -1;"></div>
+                
+            <div class="form-group">
+                    <label for="agendamento-data">Data*</label>
+                    <input type="date" id="agendamento-data" required>
+                </div>
+                <div class="form-group">
+                    <label for="agendamento-hora">Hora*</label>
+                    <input type="time" id="agendamento-hora" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="agendamento-entrega">Transporte</label>
+                    <select id="agendamento-entrega">
+                        <option value="Cliente Traz">Cliente Traz/Leva</option>
+                        <option value="Busca-e-Entrega">Tele-Busca e Entrega</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / span 2;">
+                    <label for="agendamento-obs">Observações Gerais</label>
+                    <textarea id="agendamento-obs" rows="3"></textarea>
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+                    <button type="submit" class="btn-principal">Salvar Agendamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Editar Anúncio de Adoção -->
+    <div id="modal-editar-adocao" class="modal-admin" style="display:none;">
+        <div class="modal-admin-content modal-lg">
+            <span class="close-modal-admin" onclick="document.getElementById('modal-editar-adocao').style.display='none'">&times;</span>
+            <h2><i class="fas fa-edit"></i> Editar Anúncio de Adoção</h2>
+            <form id="form-editar-adocao" class="dashboard-form">
+                <input type="hidden" id="edit-adocao-id">
+                <label>Nome do Pet</label>
+                <input type="text" id="edit-adocao-nome-pet" required>
+                <label>Idade do Pet</label>
+                <input type="text" id="edit-adocao-idade-pet">
+                <label>Observações</label>
+                <textarea id="edit-adocao-observacoes"></textarea>
+                <label>Nome do Tutor</label>
+                <input type="text" id="edit-adocao-tutor-nome">
+                <label>Telefone do Tutor</label>
+                <input type="text" id="edit-adocao-tutor-telefone">
+                <label>Email do Tutor</label>
+                <input type="email" id="edit-adocao-tutor-email">
+                <label>Cidade</label>
+                <input type="text" id="edit-adocao-cidade">
+                <button type="submit" class="btn-principal">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+    <div id="modal-confirmar-importacao" class="modal-admin">
+        <div class="modal-admin-content">
+            <span class="close-modal-admin">&times;</span>
+            <h2><i class="fas fa-shield-alt"></i> Confirmar Ação Crítica</h2>
+            <p>Para restaurar o backup, por favor, confirme sua identidade digitando sua senha de acesso.</p>
+            
+            <form id="form-confirmar-importacao" class="dashboard-form" style="grid-template-columns: 1fr;">
+                <div class="form-group">
+                    <label for="importar-senha-confirmacao">Sua Senha</label>
+                    <div class="password-container">
+                        <input type="password" id="importar-senha-confirmacao" required>
+                        <i class="fas fa-eye password-toggle-icon"></i>
+                    </div>
+                    <small id="import-password-error" class="error-message" style="display: none;"></small>
+                </div>
+                <div class="form-group full-width">
+                    <button type="submit" class="btn-principal">Confirmar e Restaurar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+   
+    <script type="module" src="js/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>

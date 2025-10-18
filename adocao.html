@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espaço PetShop - Adoção</title>
+    <link rel="icon" type="image/png" href="images/icone-patinha.png">
+    <meta name="description" content="Adote um amigo! Cães e gatos esperando por um lar cheio de amor e carinho.">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://espacopet.site/adocao.html">
+    <meta property="og:title" content="Nossos Serviços - Espaço PetShop">
+    <meta property="og:description" content="Oferecemos o melhor para seu amigo de quatro patas, com muito carinho e profissionalismo. Conheça nossos pacotes!">
+    <meta property="og:image" content="https://espacopet.site/images/logo-petshop.png">
+    <meta property="og:locale" content="pt_BR">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://espacopet.site/adocao.html">
+    <meta property="twitter:title" content="Nossos Serviços - Espaço PetShop">
+    <meta property="twitter:description" content="Oferecemos o melhor para seu amigo de quatro patas, com muito carinho e profissionalismo. Conheça nossos pacotes!">
+    <meta property="twitter:image" content="https://espacopet.site/images/logo-petshop.png">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <a href="index.html" class="logo">
+                <img src="images/logo-petshop.png" alt="Logo PetShop Amigo Fiel">
+            </a>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Início</a></li>
+                <li><a href="servicos.html">Serviços</a></li>
+                <li><a href="agendamento.html">Agendamento</a></li>
+                <li><a href="adocao.html">Adoção</a></li>
+                <li><a href="acesso-restrito.html">Acesso Restrito</a></li>                
+                <li><a href="contato.html">Contato</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="adocao-hero">
+            <div class="container">
+                <h1>Adote um Amigo</h1>
+                <p>Eles não têm voz, mas têm muito amor para dar. Dê uma segunda chance a quem só precisa de um pouco de amor para florescer.</p>
+            </div>
+        </section>
+
+        <section id="anuncios">
+            <div class="container">
+                <h2>Esperando por um Lar</h2>
+                <div class="anunciar-btn-container">
+                    <a href="#formulario-adocao" class="btn-principal"><i class="fas fa-plus-circle"></i> Anunciar um Pet</a>
+                </div>
+                <div class="adocao-grid" id="adocao-grid">
+                    </div>
+            </div>
+        </section>
+        
+        <section id="formulario-adocao">
+            <div class="container">
+                <h2>Formulário para Anúncio</h2>
+                <form class="form-adocao" id="form-adocao">
+                    <div class="form-grid">
+                        <div class="form-group"><label for="nome">Seu Nome</label><input type="text" id="nome" name="nome" required></div>
+                        <div class="form-group"><label for="telefone">Seu Telefone (WhatsApp)</label><input type="tel" id="telefone" name="telefone" required></div>
+                        <div class="form-group"><label for="email">Seu E-mail</label><input type="email" id="email" name="email" required></div>
+                        <div class="form-group"><label for="cidade">Cidade</label><input type="text" id="cidade" name="cidade" required></div>
+                        <div class="form-group"><label for="nome_pet">Nome do Pet</label><input type="text" id="nome_pet" name="nome_pet" required></div>
+                        <div class="form-group"><label for="idade_pet">Idade do Pet</label><input type="text" id="idade_pet" name="idade_pet" required></div>
+                        <div class="form-group full-width"><label for="fotos">Fotos do Pet (até 3 imagens)</label><input type="file" id="fotos" name="fotos" accept="image/*" required multiple><div id="adocao-fotos-preview" class="preview-container"></div></div>                        
+                        <div class="form-group full-width"><label for="observacoes">Observações</label><textarea id="observacoes" name="observacoes" maxlength="150"></textarea><div class="char-counter"><span id="char-count">0</span> / 150</div></div>
+                        <button type="submit" class="btn-principal">Publicar Anúncio</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 - Espaço PetShop . Todos os direitos reservados.</p>
+        <p>Desenvolvido por Wiliam München</p>
+    </footer>
+    
+    <div id="imageModal" class="modal">
+      <span class="close-modal">&times;</span>
+      <button class="modal-slider-btn prev" id="modal-prev-btn">&#10094;</button>
+      <img class="modal-content" id="modalImage">
+      <button class="modal-slider-btn next" id="modal-next-btn">&#10095;</button>
+    </div>
+
+</body>
+
+    <script src="js/supabase-config.js" type="module"></script>
+    <script src="js/main.js" type="module"></script>
+</html>
