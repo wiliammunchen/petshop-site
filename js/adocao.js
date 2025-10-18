@@ -285,7 +285,7 @@ async function carregarAnuncios() {
   });
 }
 
-async function carregarAnunciosDashboard() {
+export async function carregarAnunciosDashboard() {
   const tabelaBody = document.querySelector('#tabela-adocao tbody');
   if (!tabelaBody) return;
 
@@ -296,11 +296,17 @@ async function carregarAnunciosDashboard() {
 
   if (error) {
     console.error('Erro ao carregar anúncios de adoção:', error);
+    tabelaBody.innerHTML = '<tr><td colspan="6">Erro ao carregar anúncios. Verifique o console.</td></tr>';
     return;
   }
 
   tabelaBody.innerHTML = '';
-  for (const anuncio of anuncios || []) {
+  if (!anuncios || anuncios.length === 0) {
+    tabelaBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum anúncio cadastrado.</td></tr>';
+    return;
+  }
+
+  for (const anuncio of anuncios) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>
@@ -422,88 +428,249 @@ function attachModalCloseHandlers(modal) {
 })();
 
 export function setupAdocao() {
+  // Setup for public page (adocao.html)
   const formAdocao = document.getElementById('form-adocao');
-  if (!formAdocao) return;
+  if (formAdocao) {
+    carregarAnuncios();
+    const adocaoFotosInput = document.getElementById('fotos');
+    const adocaoFotosPreview = document.getElementById('adocao-fotos-preview');
 
-  carregarAnuncios();
-  const adocaoFotosInput = document.getElementById('fotos');
-  const adocaoFotosPreview = document.getElementById('adocao-fotos-preview');
-
-  if (adocaoFotosInput && adocaoFotosPreview) {
-    adocaoFotosInput.addEventListener('change', () => {
-      adocaoFotosPreview.innerHTML = '';
-      const files = adocaoFotosInput.files;
-      if (files.length > 3) {
-        mostrarErro('Você pode selecionar no máximo 3 fotos.');
-        adocaoFotosInput.value = '';
-        return;
-      }
-      for (const file of files) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const previewItem = document.createElement('div');
-          previewItem.classList.add('preview-item');
-          previewItem.innerHTML = `<img src="${e.target.result}" alt="${file.name}" class="preview-image-thumbnail"><span class="preview-file-name">${file.name}</span>`;
-          adocaoFotosPreview.appendChild(previewItem);
+    if (adocaoFotosInput && adocaoFotosPreview) {
+      adocaoFotosInput.addEventListener('change', () => {
+        adocaoFotosPreview.innerHTML = '';
+        const files = adocaoFotosInput.files;
+        if (files.length > 3) {
+          mostrarErro('Você pode selecionar no máximo 3 fotos.');
+          adocaoFotosInput.value = '';
+          return;
         }
-        reader.readAsDataURL(file);
+        for (const file of files) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const previewItem = document.createElement('div');
+            previewItem.classList.add('preview-item');
+            previewItem.innerHTML = `<img src="${e.target.result}" alt="${file.name}" class="preview-image-thumbnail"><span class="preview-file-name">${file.name}</span>`;
+            adocaoFotosPreview.appendChild(previewItem);
+          }
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    formAdocao.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitButton = formAdocao.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Enviando...';
+
+      const fotosUrls = [];
+      if (adocaoFotosInput && adocaoFotosInput.files && adocaoFotosInput.files.length > 0) {
+        try {
+          const uploaded = await uploadFilesToStorage(adocaoFotosInput.files, { bucket: 'petshop-assets', folder: 'adocao_fotos' });
+          console.log('Upload concluído. URLs:', uploaded);
+          fotosUrls.push(...uploaded);
+        } catch (err) {
+          console.error('Erro no uploadFilesToStorage:', err);
+          mostrarErro('Erro ao fazer upload das imagens: ' + (err.message || JSON.stringify(err)));
+          submitButton.disabled = false;
+          submitButton.textContent = 'Publicar Anúncio';
+          return;
+        }
       }
-    });
-  }
 
-  formAdocao.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const submitButton = formAdocao.querySelector('button[type="submit"]');
-    submitButton.disabled = true;
-    submitButton.textContent = 'Enviando...';
+      const logical = {
+        tutorNome: document.getElementById('nome').value,
+        tutorTelefone: document.getElementById('telefone').value,
+        tutorEmail: document.getElementById('email').value,
+        cidade: document.getElementById('cidade').value,
+        nomePet: document.getElementById('nome_pet').value,
+        idadePet: document.getElementById('idade_pet').value,
+        observacoes: document.getElementById('observacoes').value,
+        imagensURL: fotosUrls
+      };
 
-    const fotosUrls = [];
-    if (adocaoFotosInput && adocaoFotosInput.files && adocaoFotosInput.files.length > 0) {
-      try {
-        const uploaded = await uploadFilesToStorage(adocaoFotosInput.files, { bucket: 'petshop-assets', folder: 'adocao_fotos' });
-        console.log('Upload concluído. URLs:', uploaded);
-        fotosUrls.push(...uploaded);
-      } catch (err) {
-        console.error('Erro no uploadFilesToStorage:', err);
-        mostrarErro('Erro ao fazer upload das imagens: ' + (err.message || JSON.stringify(err)));
+      const cols = await getPetsAdocaoColumns();
+      const payload = buildPayloadFromLogical(logical, cols);
+      if (Object.keys(payload).length === 0) {
+        mostrarErro('Nenhuma coluna válida encontrada no schema para inserir o anúncio.');
         submitButton.disabled = false;
         submitButton.textContent = 'Publicar Anúncio';
         return;
       }
-    }
 
-    const logical = {
-      tutorNome: document.getElementById('nome').value,
-      tutorTelefone: document.getElementById('telefone').value,
-      tutorEmail: document.getElementById('email').value,
-      cidade: document.getElementById('cidade').value,
-      nomePet: document.getElementById('nome_pet').value,
-      idadePet: document.getElementById('idade_pet').value,
-      observacoes: document.getElementById('observacoes').value,
-      imagensURL: fotosUrls
-    };
+      const { data, error } = await supabase.from('pets_adocao').insert(payload);
+      if (error) {
+        mostrarErro('Erro ao salvar o anúncio: ' + (error.message || JSON.stringify(error)));
+        console.error('Payload enviado:', payload, 'Erro:', error);
+      } else {
+        mostrarSucesso('Anúncio publicado com sucesso!');
+        formAdocao.reset();
+        if (adocaoFotosPreview) adocaoFotosPreview.innerHTML = '';
+        await carregarAnuncios();
+      }
 
-    const cols = await getPetsAdocaoColumns();
-    const payload = buildPayloadFromLogical(logical, cols);
-    if (Object.keys(payload).length === 0) {
-      mostrarErro('Nenhuma coluna válida encontrada no schema para inserir o anúncio.');
       submitButton.disabled = false;
       submitButton.textContent = 'Publicar Anúncio';
-      return;
-    }
+    });
+  }
 
-    const { data, error } = await supabase.from('pets_adocao').insert(payload);
-    if (error) {
-      mostrarErro('Erro ao salvar o anúncio: ' + (error.message || JSON.stringify(error)));
-      console.error('Payload enviado:', payload, 'Erro:', error);
-    } else {
-      mostrarSucesso('Anúncio publicado com sucesso!');
-      formAdocao.reset();
-      if (adocaoFotosPreview) adocaoFotosPreview.innerHTML = '';
-      await carregarAnuncios();
-    }
+  // Setup for dashboard (dashboard.html)
+  setupAdocaoDashboard();
+}
 
-    submitButton.disabled = false;
-    submitButton.textContent = 'Publicar Anúncio';
-  });
+// Dashboard-specific setup
+function setupAdocaoDashboard() {
+  const viewGerenciarAdocao = document.getElementById('view-gerenciar-adocao');
+  if (!viewGerenciarAdocao) return;
+
+  // Load adoption announcements when dashboard loads
+  carregarAnunciosDashboard();
+
+  // Refresh button handler
+  const btnRefresh = document.getElementById('btn-refresh-adocao');
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', async () => {
+      btnRefresh.disabled = true;
+      btnRefresh.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+      await carregarAnunciosDashboard();
+      btnRefresh.disabled = false;
+      btnRefresh.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
+    });
+  }
+
+  // Event delegation for table buttons (edit, toggle, delete)
+  const tabelaBody = document.querySelector('#tabela-adocao tbody');
+  if (tabelaBody) {
+    tabelaBody.addEventListener('click', async (e) => {
+      const btnEdit = e.target.closest('.btn-edit-adocao');
+      const btnToggle = e.target.closest('.btn-toggle-adocao');
+      const btnDelete = e.target.closest('.btn-delete-adocao');
+
+      if (btnEdit) {
+        const id = btnEdit.dataset.id;
+        await abrirModalEditarAdocao(id);
+      } else if (btnToggle) {
+        const id = btnToggle.dataset.id;
+        const currentStatus = btnToggle.dataset.status === 'true';
+        await toggleAdotadoStatus(id, currentStatus);
+      } else if (btnDelete) {
+        const id = btnDelete.dataset.id;
+        await excluirAnuncio(id);
+      }
+    });
+  }
+
+  // Edit modal form handler
+  const formEditarAdocao = document.getElementById('form-editar-adocao');
+  if (formEditarAdocao) {
+    formEditarAdocao.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await salvarEdicaoAdocao();
+    });
+  }
+}
+
+// Function to open edit modal
+async function abrirModalEditarAdocao(id) {
+  const { data: anuncio, error } = await supabase
+    .from('pets_adocao')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Erro ao buscar anúncio:', error);
+    mostrarErro('Erro ao carregar dados do anúncio.');
+    return;
+  }
+
+  const modal = document.getElementById('modal-editar-adocao');
+  if (!modal) return;
+
+  // Populate form fields
+  document.getElementById('edit-adocao-id').value = anuncio.id;
+  document.getElementById('edit-adocao-nome-pet').value = val(anuncio, 'nome_pet', 'nomePet') || '';
+  document.getElementById('edit-adocao-idade-pet').value = val(anuncio, 'idade_pet', 'idadePet') || '';
+  document.getElementById('edit-adocao-observacoes').value = anuncio.observacoes || '';
+  document.getElementById('edit-adocao-tutor-nome').value = val(anuncio, 'tutor_nome', 'tutorNome') || '';
+  document.getElementById('edit-adocao-tutor-telefone').value = val(anuncio, 'tutor_telefone', 'tutorTelefone') || '';
+  document.getElementById('edit-adocao-tutor-email').value = val(anuncio, 'tutor_email', 'tutorEmail') || '';
+  document.getElementById('edit-adocao-cidade').value = val(anuncio, 'cidade', 'cidade') || '';
+
+  modal.style.display = 'block';
+  attachModalCloseHandlers(modal);
+}
+
+// Function to save edited adoption
+async function salvarEdicaoAdocao() {
+  const id = document.getElementById('edit-adocao-id').value;
+
+  const logical = {
+    nomePet: document.getElementById('edit-adocao-nome-pet').value,
+    idadePet: document.getElementById('edit-adocao-idade-pet').value,
+    observacoes: document.getElementById('edit-adocao-observacoes').value,
+    tutorNome: document.getElementById('edit-adocao-tutor-nome').value,
+    tutorTelefone: document.getElementById('edit-adocao-tutor-telefone').value,
+    tutorEmail: document.getElementById('edit-adocao-tutor-email').value,
+    cidade: document.getElementById('edit-adocao-cidade').value
+  };
+
+  const cols = await getPetsAdocaoColumns();
+  const payload = buildPayloadFromLogical(logical, cols);
+
+  if (Object.keys(payload).length === 0) {
+    mostrarErro('Nenhuma coluna válida encontrada para atualizar.');
+    return;
+  }
+
+  const { error } = await supabase
+    .from('pets_adocao')
+    .update(payload)
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao atualizar anúncio:', error);
+    mostrarErro('Erro ao salvar alterações: ' + error.message);
+  } else {
+    mostrarSucesso('Anúncio atualizado com sucesso!');
+    document.getElementById('modal-editar-adocao').style.display = 'none';
+    await carregarAnunciosDashboard();
+  }
+}
+
+// Function to toggle adopted status
+async function toggleAdotadoStatus(id, currentStatus) {
+  const newStatus = !currentStatus;
+  const { error } = await supabase
+    .from('pets_adocao')
+    .update({ adotado: newStatus })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao alterar status:', error);
+    mostrarErro('Erro ao alterar status de adoção: ' + error.message);
+  } else {
+    mostrarSucesso(newStatus ? 'Pet marcado como adotado!' : 'Pet marcado como disponível!');
+    await carregarAnunciosDashboard();
+  }
+}
+
+// Function to delete announcement
+async function excluirAnuncio(id) {
+  if (!confirm('Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.')) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from('pets_adocao')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao excluir anúncio:', error);
+    mostrarErro('Erro ao excluir anúncio: ' + error.message);
+  } else {
+    mostrarSucesso('Anúncio excluído com sucesso!');
+    await carregarAnunciosDashboard();
+  }
 }
