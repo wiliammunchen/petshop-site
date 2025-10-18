@@ -1,4 +1,44 @@
 import { supabase } from './supabase-config.js';
+import { normalizeArrayField, firstArrayItem } from './utils/normalizeArray.js';
+
+const listContainer = document.getElementById('servicos-list') || document.querySelector('.servicos-list');
+
+export async function fetchServicos() {
+  const { data, error } = await supabase
+    .from('servicos')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro ao buscar serviços', error);
+    return [];
+  }
+  return data || [];
+}
+
+export function renderServicos(records) {
+  if (!listContainer) return;
+  listContainer.innerHTML = '';
+  records.forEach(rec => {
+    const thumb = firstArrayItem(rec.imagens_url ?? rec.imagensURL ?? rec.imagens_url_arr ?? rec.imagensURL_arr) || '/images/default-service.png';
+    const card = document.createElement('div');
+    card.className = 'servico-card';
+    card.innerHTML = `
+      <img src="${thumb}" alt="${rec.nome || ''}" width="140" />
+      <div class="info">
+        <h3>${rec.nome || ''}</h3>
+        <p>R$ ${rec.valor ?? '-'}</p>
+      </div>
+    `;
+    listContainer.appendChild(card);
+  });
+}
+
+(async function init() {
+  const regs = await fetchServicos();
+  renderServicos(regs);
+})();
+
 
 // Função auxiliar para renderizar os cards em um container específico
 function renderizarServicos(container, servicos) {

@@ -1,7 +1,7 @@
-// utilitário para normalizar campos que podem ser: text[], json string, CSV, or null/undefined
+// utilitário para normalizar campos que podem ser: text[], json string, CSV, object, or null/undefined
 // retorna sempre um array de strings (padrão: [])
 export function normalizeArrayField(value) {
-  if (!value) return [];
+  if (!value && value !== 0) return [];
   // Já é array -> filtra e transforma em strings
   if (Array.isArray(value)) return value.map(String).filter(Boolean);
   // Caso jsonb vindo do supabase pode aparecer como object/Array-like
@@ -21,7 +21,7 @@ export function normalizeArrayField(value) {
         const parsed = JSON.parse(s);
         if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
       } catch (e) {
-        // ignora e tenta CSV
+        // ignora e tenta CSV abaixo
       }
     }
     // fallback CSV "a,b,c"
@@ -31,7 +31,7 @@ export function normalizeArrayField(value) {
   return [];
 }
 
-export function firstImage(value) {
+export function firstArrayItem(value) {
   const arr = normalizeArrayField(value);
   return arr.length ? arr[0] : null;
 }

@@ -1,7 +1,47 @@
 // petshop-site/js/cadastros.js (VERSÃO CORRIGIDA)
-
-import { supabase } from './supabase-config.js';
 import { mostrarSucesso, mostrarErro } from './notificacoes.js';
+import { supabase } from './supabase-config.js';
+import { normalizeArrayField } from './utils/normalizeArray.js';
+
+// Assumindo um formulário com id="pet-form"
+const petForm = document.getElementById('pet-form');
+if (petForm) {
+  petForm.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const form = ev.target;
+    const formData = new FormData(form);
+
+    const id = formData.get('id'); // vazio para novo
+    const nomePet = formData.get('nomePet')?.toString() ?? '';
+    const cidade = formData.get('cidade')?.toString() ?? '';
+    const observacoes = formData.get('observacoes')?.toString() ?? '';
+
+    // Imagens: se seu form envia um campo imagens (CSV) ou usa inputs separados, normalize
+    const imagensRaw = formData.get('imagens')?.toString() ?? ''; // exemplo: csv or json string
+    const imagensArray = normalizeArrayField(imagensRaw);
+
+    try {
+      if (id) {
+        const { error } = await supabase.from('pets_adocao').update({
+          nomePet, cidade, observacoes, imagens_url: imagensArray
+        }).eq('id', Number(id));
+        if (error) throw error;
+        alert('Atualizado com sucesso');
+      } else {
+        const { error } = await supabase.from('pets_adocao').insert([{
+          nomePet, cidade, observacoes, imagens_url: imagensArray
+        }]);
+        if (error) throw error;
+        alert('Cadastrado com sucesso');
+        form.reset();
+      }
+    } catch (err) {
+      console.error('Erro ao salvar pet', err);
+      alert('Erro ao salvar. Veja console.');
+    }
+  });
+}
+
 
 export function setupCadastros() {
     // --- Variáveis para Bairros ---

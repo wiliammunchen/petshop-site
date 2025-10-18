@@ -1,9 +1,122 @@
 // petshop-site/js/adocao.js (VERSÃO COM MOVIMENTAÇÃO DO MODAL PARA <body> E MELHORIAS DE VISIBILIDADE)
 
 import { supabase } from './supabase-config.js';
+import { normalizeArrayField, firstArrayItem } from './utils/normalizeArray.js';
 
 const mostrarErro = (mensagem) => alert(mensagem);
 const mostrarSucesso = (mensagem) => alert(mensagem);
+
+const listContainer = document.getElementById('adocao-list') || document.querySelector('.adocao-list');
+const detailContainer = document.getElementById('adocao-detail') || document.querySelector('.adocao-detail');
+
+export async function fetchAdocoes() {
+  const { data, error } = await supabase
+    .from('pets_adocao')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro ao buscar adoções', error);
+    return [];
+  }
+  return data || [];
+}
+
+export function renderGallery(containerEl, record) {
+  if (!containerEl) return;
+  const images = normalizeArrayField(record.imagens_url ?? record.imagensURL ?? record.imagens_url_arr ?? record.imagensURL_arr);
+  containerEl.innerHTML = '';
+  if (!images.length) {
+    containerEl.innerHTML = '<div class="no-images">Sem imagens</div>';
+    return;
+  }
+  const ul = document.createElement('div');
+  ul.className = 'gallery';
+  images.forEach((url, i) => {
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = `${record.nomePet || 'pet'}-${i}`;
+    img.width = 200;
+    img.loading = 'lazy';
+    ul.appendChild(img);
+  });
+  containerEl.appendChild(ul);
+}
+
+export function renderList(records) {
+  if (!listContainer) return;
+  listContainer.innerHTML = '';
+  records.forEach(rec => {
+    const card = document.createElement('div');
+    card.className = 'adocao-card';
+    const thumb = firstArrayItem(rec.imagens_url ?? rec.imagensURL ?? rec.imagens_url_arr ?? rec.imagensURL_arr) || '/images/default-pet-avatar.png';
+    card.innerHTML = `
+      <img src="${thumb}" alt="${rec.nomePet || ''}" width="120" />
+      <div class="info">
+        <h3>${rec.nomePet || ''}</h3>
+        <p>${rec.cidade || ''}</p>
+        <button data-id="${rec.id}" class="btn-view">Ver</button>
+      </div>
+    `;
+    card.querySelector('.btn-view').addEventListener('click', () => showDetail(rec.id));
+    listContainer.appendChild(card);
+  });
+}
+
+export async function showDetail(id) {
+  const { data, error } = await supabase.from('pets_adocao').select('*').eq('id', id).single();
+  if (error) {
+    console.error('Erro ao buscar pet', error);
+    return;
+  }
+  if (!detailContainer) return;
+  detailContainer.innerHTML = `
+    <h2>${data.nomePet || ''}</h2>
+    <div id="gallery-${id}" class="gallery-container"></div>
+    <p>${data.observacoes || ''}</p>
+    <button id="edit-images-${id}" class="btn-edit-images">Editar imagens</button>
+  `;
+  renderGallery(document.getElementById(`gallery-${id}`), data);
+
+  // exemplo handler para editar imagens (abre modal/trigger)
+  document.getElementById(`edit-images-${id}`).addEventListener('click', async () => {
+    // aqui você pode abrir um modal com upload — depois de obter urls[], chame updateImages
+    const urls = await promptForImageUrls(); // implemente sua UI de upload e retorno de URLs
+    if (urls && urls.length) {
+      await updateImages(id, urls);
+      const updated = await supabase.from('pets_adocao').select('*').eq('id', id).single();
+      renderGallery(document.getElementById(`gallery-${id}`), updated.data);
+    }
+  });
+}
+
+export async function updateImages(id, urlsArray) {
+  // envia imagens_url como array (text[])
+  const { data, error } = await supabase
+    .from('pets_adocao')
+    .update({ imagens_url: urlsArray })
+    .eq('id', id)
+    .select();
+  if (error) {
+    console.error('Erro ao atualizar imagens', error);
+    throw error;
+  }
+  return data;
+}
+
+// Placeholder: implemente a UI real de upload que retorna URL list
+async function promptForImageUrls() {
+  // simples prompt para testes — substitua por upload para Supabase Storage
+  const raw = prompt('Cole as URLs das imagens separadas por vírgula:');
+  if (!raw) return [];
+  return raw.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// inicialização
+(async function init() {
+  const registros = await fetchAdocoes();
+  renderList(registros);
+})();
 
 async function carregarAnuncios() {
     const adocaoGrid = document.getElementById('adocao-grid');
