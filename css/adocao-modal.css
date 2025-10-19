@@ -1,0 +1,315 @@
+/* css/adocao-modal.css
+   Consolidado:
+   - modal/galeria moderno + thumbnails + touch swipe
+   - estilos específicos da página adocao.html (grid, cards, slider, form)
+   Inclua em adocao.html:
+   <link rel="stylesheet" href="/css/adocao-modal.css">
+*/
+
+/* --- Modal / Gallery --- */
+:root{
+  --am-backdrop: rgba(10,12,15,0.75);
+  --am-accent: #21b07a;
+  --am-text: #f7f7f7;
+  --am-muted: #bfc7cf;
+  --am-radius: 12px;
+  --am-shadow: 0 10px 30px rgba(2,6,23,0.6);
+  --btn-size: 44px;
+}
+
+.adocao-modal, #adocao-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+}
+.adocao-modal.open, #adocao-modal.open { display: flex; }
+
+/* backdrop */
+.adocao-modal .am-backdrop, #adocao-modal .am-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--am-backdrop);
+  backdrop-filter: blur(6px) saturate(120%);
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  transition: opacity .22s ease;
+}
+
+/* panel */
+.adocao-modal .am-panel, #adocao-modal .am-panel {
+  position: relative;
+  z-index: 2;
+  max-width: 1100px;
+  width: min(95%, 1100px);
+  margin: 20px;
+  border-radius: var(--am-radius);
+  box-shadow: var(--am-shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18,20,22,0.65);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* close */
+.adocao-modal .am-close, #adocao-modal .am-close {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  z-index: 4;
+  border: none;
+  background: transparent;
+  color: var(--am-muted);
+  font-size: 28px;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: color .15s ease, transform .08s ease;
+}
+.adocao-modal .am-close:hover, #adocao-modal .am-close:hover { color: var(--am-text); transform: scale(1.03); }
+
+/* body layout */
+.adocao-modal .am-body, #adocao-modal .am-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px;
+}
+
+/* nav buttons */
+.adocao-modal .am-nav, #adocao-modal .am-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--btn-size);
+  height: var(--btn-size);
+  background: rgba(0,0,0,0.35);
+  color: var(--am-text);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  font-size: 22px;
+  transition: transform .12s ease, background .12s ease;
+  user-select: none;
+}
+.adocao-modal .am-nav:hover, #adocao-modal .am-nav:hover { transform: translateY(-2px); background: rgba(0,0,0,0.45); }
+
+/* media wrap */
+.adocao-modal .am-media-wrap, #adocao-modal .am-media-wrap {
+  display: grid;
+  gap: 8px;
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  max-height: 80vh;
+}
+
+/* actual image - adjusted to be ~20% smaller than previous default */
+.adocao-modal .am-media,
+#adocao-modal .am-media,
+#adocao-modal-image,
+#adocao-modal img.am-media,
+.adocao-modal img.am-media {
+  max-width: 75vw;        /* reduced ~20% */
+  max-height: 56vh;       /* reduced ~20% */
+  object-fit: contain;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  transition: transform .18s ease;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+/* caption */
+.adocao-modal .am-caption, #adocao-modal .am-caption {
+  font-size: 13px;
+  color: var(--am-muted);
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* thumbnails */
+.adocao-modal .am-thumbs, #adocao-modal .am-thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 14px;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+}
+.adocao-modal .am-thumb, #adocao-modal .am-thumb {
+  flex: 0 0 auto;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 2px;
+  background: transparent;
+  cursor: pointer;
+}
+.adocao-modal .am-thumb img, #adocao-modal .am-thumb img {
+  display: block;
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.adocao-modal .am-thumb.active, #adocao-modal .am-thumb.active { border-color: rgba(33,176,122,0.95); transform: scale(1.03); }
+
+/* Responsive tweaks for modal */
+@media (max-width: 720px) {
+  .adocao-modal .am-panel, #adocao-modal .am-panel { width: 96%; margin: 10px; }
+  .adocao-modal .am-body, #adocao-modal .am-body { padding: 12px; gap: 6px; }
+  .adocao-modal .am-nav, #adocao-modal .am-nav { width: 36px; height: 36px; font-size: 18px; }
+  .adocao-modal .am-media, #adocao-modal .am-media, #adocao-modal-image { max-width: 92vw; max-height: 52vh; }
+}
+
+/* --- Adoption page specific styles (moved from style.css) --- */
+
+/* Adoption hero area */
+#adocao-hero {
+  background-color: #f0f7ef; /* matching theme var--verde-claro from style.css */
+  text-align: center;
+  padding: 4rem 0;
+}
+
+/* grid */
+.adocao-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+
+/* card */
+.adocao-card {
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.adocao-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.adocao-card-info {
+  padding: 1rem;
+  flex-grow: 1;
+}
+.adocao-card-info h3 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+.adocao-card-info p { font-size: 0.9rem; margin-bottom: 0.25rem; color: #777; }
+.adocao-card-info i { margin-right: 0.5rem; color: #5A9A4A; } /* green icon */
+.adocao-card-info .card-divider { border: 0; height: 1px; background-color: #eee; margin: 0.75rem 0; }
+.adocao-card-info p strong { color: #333; font-weight: 700; }
+
+/* delete button top-right */
+.btn-excluir {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(220,53,69,0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  opacity: 0;
+  transform: scale(0.8);
+  z-index: 5;
+}
+.adocao-card:hover .btn-excluir { opacity: 1; transform: scale(1); }
+.btn-excluir:hover { background: #dc3545; transform: scale(1.1) rotate(10deg); }
+
+/* announce form */
+.form-adocao {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.form-group.full-width { grid-column: 1 / -1; }
+.form-adocao .form-group input, .form-adocao .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* slider inside card */
+.card-imagem-container {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02));
+}
+.card-imagem-container .adocao-imagem {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+.card-imagem-container .adocao-imagem.active { display: block; }
+
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 2;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: background-color 0.3s ease;
+}
+.slider-btn:hover { background-color: rgba(0,0,0,0.7); }
+.slider-btn.prev { left: 5px; border-radius: 0 3px 3px 0; }
+.slider-btn.next { right: 5px; border-radius: 3px 0 0 3px; }
+
+/* adopted badge */
+.adotado-banner {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  background: rgba(33,176,122,0.95);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  z-index: 4;
+}
+
+/* small utilities */
+.empty { color: #94a3b8; text-align:center; padding:36px 0; font-size:16px; }
+.card-divider { margin: 8px 0; border: none; border-top: 1px solid rgba(0,0,0,0.06); }
+
+/* responsive adjustments */
+@media (max-width: 780px) {
+  .adocao-card { grid-template-columns: 1fr; }
+  .card-imagem-container { height: 200px; }
+}
+
+/* end of adocao-modal.css */

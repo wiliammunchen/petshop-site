@@ -6,9 +6,196 @@ import { mostrarSucesso, mostrarErro } from './notificacoes.js';
 import { supabase } from './supabase-config.js';
 import { normalizeArrayField } from './utils/normalizeArray.js';
 
-//
+async function fetchAdocoesAdmin() {
+  try {
+    const { data, error } = await supabase.from('adocoes').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  } catch (err) {
+    console.error('fetchAdocoesAdmin error', err);
+    return [];
+  }
+}
+
+function buildActionsCell(anuncio) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'actions-cell';
+
+  // Edit
+  const btnEdit = document.createElement('button');
+  btnEdit.className = 'btn-edit';
+  btnEdit.title = 'Editar';
+  btnEdit.innerHTML = '<i class="fas fa-edit"></i>';
+  btnEdit.addEventListener('click', () => openEditModal(anuncio));
+  wrapper.appendChild(btnEdit);
+
+  // Toggle status
+  const btnToggle = document.createElement('button');
+  btnToggle.className = anuncio.status === 'adotado' ? 'btn-status-realizado' : 'btn-status-faltou';
+  btnToggle.title = anuncio.status === 'adotado' ? 'Marcar como disponível' : 'Marcar como adotado';
+  btnToggle.innerHTML = anuncio.status === 'adotado' ? '<i class="fas fa-undo"></i>' : '<i class="fas fa-check"></i>';
+  btnToggle.addEventListener('click', async () => {
+    await toggleStatus(anuncio.id, anuncio.status === 'adotado' ? 'disponivel' : 'adotado');
+    loadGerenciarAdocao(); // reload list
+  });
+  wrapper.appendChild(btnToggle);
+
+  // Delete
+  const btnDelete = document.createElement('button');
+  btnDelete.className = 'btn-delete';
+  btnDelete.title = 'Excluir';
+  btnDelete.innerHTML = '<i class="fas fa-trash"></i>';
+  btnDelete.addEventListener('click', async () => {
+    if (!confirm('Deseja mesmo excluir este anúncio? Esta ação é irreversível.')) return;
+    await deleteAnuncio(anuncio.id);
+    loadGerenciarAdocao();
+  });
+  wrapper.appendChild(btnDelete);
+
+  return wrapper;
+}
+
+async function toggleStatus(id, novoStatus) {
+  try {
+    const { error } = await supabase.from('adocoes').update({ status: novoStatus }).eq('id', id);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('toggleStatus error', err);
+    alert('Falha ao alterar status.');
+    return false;
+  }
+}
+
+async function deleteAnuncio(id) {
+  try {
+    const { error } = await supabase.from('adocoes').delete().eq('id', id);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('deleteAnuncio error', err);
+    alert('Erro ao excluir anúncio.');
+    return false;
+  }
+}
+
+function openEditModal(anuncio) {
+  // Exemplo simples: abrir modal com campos para editar nome_pet, cidade, telefone, observacoes, status
+  // Implemente seu modal existente ou adapte para usar o modal padrão do projeto.
+  const modal = document.getElementById('modal-edit-adocao');
+  if (!modal) {
+    alert('Modal de edição não encontrado. Crie um modal com id "modal-edit-adocao" e campos para edição.');
+    return;
+  }
+  // Preenche campos (assumindo ids: edit-nome_pet, edit-cidade, edit-telefone, edit-observacoes, edit-status, edit-id)
+  modal.querySelector('#edit-id').value = anuncio.id;
+  modal.querySelector('#edit-nome_pet').value = anuncio.nome_pet || '';
+  modal.querySelector('#edit-cidade').value = anuncio.cidade || '';
+  modal.querySelector('#edit-telefone').value = anuncio.telefone || '';
+  modal.querySelector('#edit-observacoes').value = anuncio.observacoes || '';
+  modal.querySelector('#edit-status').value = anuncio.status || 'disponivel';
+  modal.style.display = 'block';
+}
+
+async function saveEditFromModal(ev) {
+  ev.preventDefault();
+  const modal = document.getElementById('modal-edit-adocao');
+  const id = modal.querySelector('#edit-id').value;
+  const nome_pet = modal.querySelector('#edit-nome_pet').value;
+  const cidade = modal.querySelector('#edit-cidade').value;
+  const telefone = modal.querySelector('#edit-telefone').value;
+  const observacoes = modal.querySelector('#edit-observacoes').value;
+  const status = modal.querySelector('#edit-status').value;
+
+  try {
+    const { error } = await supabase.from('adocoes').update({ nome_pet, cidade, telefone, observacoes, status }).eq('id', id);
+    if (error) throw error;
+    modal.style.display = 'none';
+    loadGerenciarAdocao();
+    alert('Anúncio atualizado com sucesso.');
+  } catch (err) {
+    console.error('saveEditFromModal error', err);
+    alert('Erro ao salvar alterações.');
+  }
+}
+
+// Render list in the admin area, table container with id #adocoes-admin-table (crie no HTML se não existir)
+export async function loadGerenciarAdocao() {
+  const container = document.querySelector('#adocoes-admin-table');
+  if (!container) {
+    console.warn('Container #adocoes-admin-table não encontrado. Insira um elemento <div id="adocoes-admin-table"></div> no view gerenciar-adocao.');
+    return;
+  }
+
+  const registros = await fetchAdocoesAdmin();
+
+  // Build table
+  const table = document.createElement('table');
+  table.className = 'dashboard-table';
+  const thead = document.createElement('thead');
+  thead.innerHTML = `
+    <tr>
+      <th>Foto</th>
+      <th>Nome</th>
+      <th>Cidade</th>
+      <th>Contato</th>
+      <th>Status</th>
+      <th class="actions-cell-header">Ações</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+
+  registros.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = item.id;
+    tr.className = item.status === 'disponivel' ? '' : (item.status === 'adotado' ? 'cliente-pendente' : '');
+    const photo = (Array.isArray(item.fotos) && item.fotos[0]) ? item.fotos[0] : (item.fotos || 'images/no-photo.png');
+    tr.innerHTML = `
+      <td><img src="${photo}" style="width:60px;height:60px;object-fit:cover;border-radius:8px"></td>
+      <td>${escapeHtml(item.nome_pet || '')}</td>
+      <td>${escapeHtml(item.cidade || '')}</td>
+      <td>${escapeHtml(item.telefone || '')}</td>
+      <td><span class="status-badge ${item.status === 'disponivel' ? 'status-agendado' : (item.status === 'adotado' ? 'status-realizado' : '')}">${escapeHtml(item.status || '')}</span></td>
+      <td></td>
+    `;
+    const actionsCell = buildActionsCell(item);
+    tr.querySelector('td:last-child').appendChild(actionsCell);
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  container.innerHTML = '';
+  container.appendChild(table);
+
+  // Hook modal save
+  const saveBtn = document.querySelector('#modal-edit-adocao #modal-save-btn');
+  if (saveBtn) {
+    saveBtn.onclick = saveEditFromModal;
+  }
+}
+
+// helper escape
+function escapeHtml(str = '') {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* Auto-load when view is shown: certifique-se que sua navegação chama loadGerenciarAdocao() quando o view 'gerenciar-adocao' for ativado */
+document.addEventListener('DOMContentLoaded', () => {
+  // opcional: se você já determina que view está ativa no load inicial:
+  const currentView = document.querySelector('.view.active');
+  if (currentView && currentView.id === 'view-gerenciar-adocao') {
+    loadGerenciarAdocao();
+  }
+});
+
 // Pet form (simplificado) - mantém compatibilidade com a estrutura existente
-//
 const petForm = document.getElementById('pet-form');
 if (petForm) {
   petForm.addEventListener('submit', async (ev) => {

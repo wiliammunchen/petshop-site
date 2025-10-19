@@ -1,4 +1,4 @@
-// petshop-site/js/main.js (VERSÃO CORRIGIDA)
+// petshop-site/js/main.js (VERSÃO CORRIGIDA - chamar carregarAnunciosDashboard apenas após DOM ready)
 
 import { setupAuth } from './auth.js';
 import { setupUI } from './ui.js';
@@ -12,6 +12,9 @@ import { setupAdocao } from './adocao.js';
 import { setupServicosPublicos } from './servicos.js';
 import { setupRelatorios } from './relatorios.js';
 import { setupBackup } from './backup.js';
+
+// NOTE: removed the top-level import('./adocao.js') that previously executed too early.
+// We'll import adocao.js dynamically later, after DOMContentLoaded and after dashboard init.
 
 async function setupStories() {
     const storyRing = document.getElementById('story-profile-ring'); 
@@ -181,6 +184,36 @@ document.addEventListener('DOMContentLoaded', async function() {
             setupRelatorios();
             setupAdocao(); 
             setupBackup();
+
+            // IMPORTANTE: Garantir que a tabela do dashboard seja populada
+            // Importa dinamicamente adocao.js e chama carregarAnunciosDashboard
+            // somente após o DOM estar pronto e as inicializações acima terem rodado.
+            try {
+              const mod = await import('./adocao.js');
+              if (mod && typeof mod.carregarAnunciosDashboard === 'function') {
+                await mod.carregarAnunciosDashboard();
+              }
+            } catch (err) {
+              console.error('Erro ao inicializar lista de anúncios no dashboard:', err);
+            }
+
+            // conecta botão de refresh do dashboard, caso exista
+            const btnRefresh = document.getElementById('btn-refresh-adocao');
+            if (btnRefresh) {
+              btnRefresh.addEventListener('click', async () => {
+                btnRefresh.disabled = true;
+                try {
+                  const mod = await import('./adocao.js');
+                  if (mod && typeof mod.carregarAnunciosDashboard === 'function') {
+                    await mod.carregarAnunciosDashboard();
+                  }
+                } catch (err) {
+                  console.error('Erro ao atualizar anúncios:', err);
+                } finally {
+                  btnRefresh.disabled = false;
+                }
+              });
+            }
         }
     } else {
         // Roda os scripts das páginas públicas

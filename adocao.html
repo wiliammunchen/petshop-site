@@ -23,6 +23,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/adocao-modal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,20 +104,12 @@
 
 </body>
 
-    <!-- Adicione no final do body das suas páginas (ex: adocao.html) -->
-    <script type="module">
-    import './js/adocao.js';
-    </script>
+ <!-- Substitua os blocos inline de import por estas tags: -->
+<script type="module" src="/js/adocao.js"></script>
+<script type="module" src="/js/servicos.js"></script>
+<script type="module" src="/js/cadastros.js"></script>
 
-    <!-- Para páginas de serviços -->
-    <script type="module">
-    import './js/servicos.js';
-    </script>
-
-    <!-- Para páginas de cadastros -->
-    <script type="module">
-    import './js/cadastros.js';
-    </script>
-    <script src="js/supabase-config.js" type="module"></script>
-    <script src="js/main.js" type="module"></script>
+<!-- Mantendo as configurações supabase e main -->
+<script src="/js/supabase-config.js" type="module"></script>
+<script src="/js/main.js" type="module"></script>
 </html>

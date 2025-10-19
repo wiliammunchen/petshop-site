@@ -115,103 +115,6 @@ section { padding: 5rem 0; }
 }
 
 /*-----------------------------------*/
-/* 4. PÁGINA DE ADOÇÃO               */
-/*-----------------------------------*/
-#adocao-hero {
-    background-color: var(--verde-claro);
-    text-align: center;
-    padding: 4rem 0;
-}
-
-.adocao-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 3rem;
-}
-
-.adocao-card {
-    background: var(--branco);
-    border-radius: 15px;
-    box-shadow: var(--sombra);
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    position: relative; 
-    display: flex;
-    flex-direction: column;
-}
-.adocao-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-}
-
-.adocao-card-info { padding: 1rem; flex-grow: 1; }
-.adocao-card-info h3 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-.adocao-card-info p { font-size: 0.9rem; margin-bottom: 0.25rem; color: #777; }
-.adocao-card-info i { margin-right: 0.5rem; color: var(--verde); }
-.adocao-card-info .card-divider { border: 0; height: 1px; background-color: #eee; margin: 0.75rem 0; }
-.adocao-card-info p strong { color: var(--cor-texto); font-weight: 700; }
-.fab.fa-whatsapp { color: var(--verde); }
-
-.btn-excluir {
-    position: absolute; top: 10px; right: 10px;
-    background: rgba(220, 53, 69, 0.8);
-    color: white; border: none; border-radius: 50%;
-    width: 30px; height: 30px; cursor: pointer;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 0.9rem; transition: all 0.3s ease;
-    opacity: 0; transform: scale(0.8); z-index: 5;
-}
-.adocao-card:hover .btn-excluir { opacity: 1; transform: scale(1); }
-.btn-excluir:hover { background: #dc3545; transform: scale(1.1) rotate(10deg); }
-
-.anunciar-btn-container { text-align: center; margin-bottom: 3rem; }
-
-#formulario-adocao { background-color: var(--verde-claro); }
-.form-adocao {
-    max-width: 600px; margin: 0 auto;
-    padding: 20px; background-color: #f9f9f9;
-    border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-.form-group { display: flex; flex-direction: column; }
-.form-group.full-width { grid-column: 1 / -1; }
-.form-adocao .form-group label { margin-bottom: 8px; font-weight: bold; }
-.form-adocao .form-group input, 
-.form-adocao .form-group textarea {
-    width: 100%; padding: 10px; border: 1px solid #ccc;
-    border-radius: 6px; font-size: 1rem;
-}
-.form-group textarea { resize: vertical; min-height: 120px; }
-.char-counter { text-align: right; font-size: 0.8rem; color: #888; }
-.form-adocao button { width: 100%; margin-top: 1.5rem; font-size: 1.1rem; }
-
-/* SLIDER DE IMAGENS NO CARD */
-.card-imagem-container {
-    position: relative;
-    width: 100%; height: 250px;
-    overflow: hidden;
-}
-.card-imagem-container .adocao-imagem {
-    display: none;
-    width: 100%; height: 100%;
-    object-fit: cover; position: absolute; top: 0; left: 0;
-    cursor: pointer;
-}
-.card-imagem-container .adocao-imagem.active { display: block; }
-
-.slider-btn {
-    position: absolute; top: 50%; transform: translateY(-50%);
-    background-color: rgba(0, 0, 0, 0.4); color: white;
-    border: none; cursor: pointer; padding: 0.5rem;
-    z-index: 2; font-size: 1.2rem; line-height: 1;
-    transition: background-color 0.3s ease;
-}
-.slider-btn:hover { background-color: rgba(0, 0, 0, 0.7); }
-.slider-btn.prev { left: 5px; border-radius: 0 3px 3px 0; }
-.slider-btn.next { right: 5px; border-radius: 3px 0 0 3px; }
-
-/*-----------------------------------*/
 /* 5. PÁGINA DE AGENDAMENTO E CONTATO */
 /*-----------------------------------*/
 #agendamento-form, #contato { padding: 3rem 0; }
@@ -315,17 +218,6 @@ footer {
     display: flex; flex-direction: column; align-items: center;        
     padding: 20px 0; margin-top: 40px;
 }
-
-/* --- ESTILO PARA O BANNER DE "ADOTADO" --- */
-.adotado-banner {
-    position: absolute; top: 20px; left: -45px;
-    background-color: #e63946; color: white;
-    padding: 8px 40px; font-weight: bold; font-size: 1rem;
-    text-transform: uppercase; transform: rotate(-45deg);
-    z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    text-align: center;
-}
-.card-imagem-container { overflow: hidden; }
 
 /* --- CADASTRO DE MÚLTIPLOS PETS --- */
 .form-divider {
@@ -654,115 +546,6 @@ footer {
 #horarios-disponiveis-container .horario-indisponivel { color: #dc3545; font-weight: bold; }
 #horarios-disponiveis-container .horario-sucesso { color: var(--verde); font-weight: bold; }
 
-/* FORMULÁRIOS MULTI-SEÇÃO */
-.form-section-title {
-    grid-column: 1 / -1; font-family: var(--fonte-titulo); color: var(--roxo);
-    border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem;
-    margin-top: 1rem; margin-bottom: 0.5rem;
-    font-size: 1.4rem; font-weight: 700;
-}
-#form-agendamento-publico .form-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem 1.5rem;
-}
-#form-agendamento-publico .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.2rem 1.5rem;
-}
-#form-agendamento-publico .form-group[style*="grid-column: 1 / span 2;"] {
-    grid-column: 1 / -1;
-}
-
-/* --- ESTILOS PARA FORMULÁRIO DE MÚLTIPLOS PETS --- */
-
-.pet-form-template .form-grid {
-    gap: 1rem 1.5rem; /* Ajusta o espaçamento interno do grid do pet */
-}
-
-#data-agendamento {
-    max-width: 60%;
-    font-size: 1.5rem;
-    grid-column: 1 / -1;
-    text-align: center; 
-    margin: 0; 
-    align-self: center;
-}
-
-/* Caixa de informação da Tele-Busca */
-#aviso-tele-busca {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-top: 1.5rem;
-}
-
-/* Centraliza a caixa de informações da Tele-Busca no formulário */
-.info-box {
-    margin: 1.5rem auto 0 auto;
-    width: fit-content;
-    max-width: 95%;
-    display: flex;
-    gap: 15px;
-    background-color: var(--verde-claro);
-    border-left: 5px solid var(--verde);
-    padding: 1.5rem;
-    border-radius: 8px;
-}
-
-.info-box i {
-    font-size: 1.5rem;
-    color: var(--verde);
-    margin-top: 5px;
-}
-.info-box p, .info-box ul {
-    margin: 0;
-}
-.info-box ul {
-    list-style-position: inside;
-    padding-left: 5px;
-    font-size: 0.9rem;
-}
-
-/* Container para os checkboxes de serviços adicionais */
-/* Container para os checkboxes de serviços adicionais */
-.adicionais-container {
-    grid-column: 1 / -1;
-    margin-top: 1rem;
-}
-.adicionais-container label {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-.checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 10px;
-    background-color: #f8fafc;
-    border: 1px solid #e2e8f0;
-    padding: 1rem;
-    border-radius: 8px;
-}
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-}
-
-.checkbox-item input[type="checkbox"] {
-    /* Define o espaçamento à direita e remove as margens conflitantes */
-    margin: 0px 15px 0 0 !important;
-    width: auto !important;
-}
-
-.checkbox-item label {
-    /* Remove a margem inferior para alinhamento perfeito */
-    margin-bottom: 0 !important;
-    font-weight: normal;
-}
-
-/* ADICIONE ESTE BLOCO NO FINAL DO ARQUIVO style.css */
-
 /* --- ESTILOS PARA PRÉ-VISUALIZAÇÃO DE UPLOAD --- */
 .preview-container {
     display: flex;
@@ -831,9 +614,6 @@ footer {
 
 @keyframes zoom { from {transform:scale(0)} to {transform:scale(1)} }
 
-/*-----------------------------------*/
-/* 10. RESPONSIVIDADE                */
-/*-----------------------------------*/
 @media (max-width: 992px) {
     section { padding: 4rem 0; }
     .contato-wrapper { flex-direction: column; }
@@ -902,7 +682,7 @@ footer {
     h1 { font-size: 2rem; }
     h2 { font-size: 1.6rem; }
     #hero { padding: 3rem 1rem; }
-    #adocao-hero, #contato-hero, #servicos-hero { padding: 3rem 0; }
+    #contato-hero, #servicos-hero { padding: 3rem 0; }
     .form-adocao, .form-contato, #form-agendamento { padding: 1.5rem; }
     .whatsapp-float { bottom: 20px; right: 20px; width: 50px; height: 50px; }
     .login-container { padding: 2rem; }
