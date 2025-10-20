@@ -1,16 +1,5 @@
-// js/adocao.js
-// Versão consolidada e revisada — contém:
-// - todas as funções necessárias para a página adocao.html (fetch, insert, update, render, gallery, modal/slider, keyboard nav)
-// - normalização de campos de imagem (várias variantes de nomes no schema)
-// - usa o cliente supabase existente (import { supabase } from '/js/supabase-config.js')
-// - mantém compatibilidade com uploadFilesToStorage (importado de /js/upload.js)
-
 import { supabase } from '/js/supabase-config.js';
 import { uploadFilesToStorage } from '/js/upload.js';
-
-/* =========================
-   Utilitários (inclusos aqui para evitar dependência extra)
-   ========================= */
 
 /**
  * Normaliza vários formatos de campo de imagens para um array de URLs.
@@ -64,10 +53,21 @@ const mostrarErro = (mensagem) => {
   try { Toastify({ text: mensagem, duration: 4000, gravity: "top", position: "right" }).showToast(); }
   catch(e){ alert(mensagem); }
 };
+
 const mostrarSucesso = (mensagem) => {
-  try { Toastify({ text: mensagem, duration: 3000, gravity: "top", position: "right", backgroundColor: "#4CAF50" }).showToast(); }
-  catch(e){ alert(mensagem); }
-}
+  try { 
+    Toastify({ 
+      text: mensagem, 
+      duration: 3000, 
+      gravity: "top", 
+      position: "right", 
+      style: { background: "#4CAF50" }  // Corrigido
+    }).showToast(); 
+  }
+  catch(e){ 
+    alert(mensagem); 
+  }
+};
 
 /* =========================
    Funções DB relacionadas a pets_adocao
@@ -164,6 +164,17 @@ export async function updateAdocaoImages(id, imagensArray) {
 const listContainer = document.getElementById('adocao-grid') || document.querySelector('.adocao-grid');
 const detailContainer = document.getElementById('gallery-container') || document.querySelector('.adocao-detail');
 
+/* Função para aplicar estilos de ajuste nas imagens de modais */
+function applyModalImageStyles(img) {
+  if (!img) return;
+  img.style.maxWidth = '85vw';
+  img.style.maxHeight = '80vh';
+  img.style.width = 'auto';
+  img.style.height = 'auto';
+  img.style.objectFit = 'contain';
+  img.style.margin = 'auto';
+}
+
 /* Ensure modal markup exists. If page doesn't include it, create a minimal modal and append to body. */
 function ensureModalMarkup() {
   let modal = document.getElementById('imageModal');
@@ -182,43 +193,74 @@ function ensureModalMarkup() {
     </div>
   `;
   document.body.appendChild(modal);
-  // basic styles can be provided globaly; this just ensures elements exist
   return modal;
 }
 
+// Variáveis para elementos do modal
 const modalEl = ensureModalMarkup();
-const modalImage = modalEl.querySelector('#modalImage');
-const modalPrevBtn = modalEl.querySelector('#modal-prev-btn');
-const modalNextBtn = modalEl.querySelector('#modal-next-btn');
-const modalCloseBtn = modalEl.querySelector('.close-modal');
+const modalImage = modalEl.querySelector('#modalImage') || document.getElementById('modalImage') || document.getElementById('adocao-modal-image') || document.querySelector('.am-media');
+const modalPrevBtn = modalEl.querySelector('#modal-prev-btn') || document.getElementById('modal-prev-btn') || document.querySelector('.am-prev');
+const modalNextBtn = modalEl.querySelector('#modal-next-btn') || document.getElementById('modal-next-btn') || document.querySelector('.am-next');
+const modalCloseBtn = modalEl.querySelector('.close-modal') || document.querySelector('.am-close');
 
 let modalState = { images: [], index: 0, isOpen: false };
 
+function openImageModal(images, startIndex = 0) {
+  // Encontra elementos do modal se não estiverem já referenciados
+  const modal = modalEl || document.getElementById('imageModal') || document.getElementById('adocao-modal') || document.querySelector('.adocao-modal');
+  const img = modalImage || document.getElementById('modalImage') || document.getElementById('adocao-modal-image') || document.querySelector('.am-media');
+  
+  if (!modal || !img) {
+    console.error('Elementos do modal não encontrados');
+    return;
+  }
+  
+  modalState.images = Array.isArray(images) ? images : normalizeArrayField(images);
+  modalState.index = Math.max(0, Math.min(startIndex || 0, modalState.images.length - 1));
+  
+  // Aplica estilos ao modal para centralizar
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
+  if (modal.classList) modal.classList.add('open');
+  
+  modalState.isOpen = true;
+  renderModalImage();
+  
+  // Configura botões de navegação
+  const prev = modalPrevBtn || modal.querySelector('.am-prev') || modal.querySelector('#modal-prev-btn');
+  const next = modalNextBtn || modal.querySelector('.am-next') || modal.querySelector('#modal-next-btn');
+  
+  if (modalState.images.length > 1) {
+    if (prev) prev.style.display = 'inline-block';
+    if (next) next.style.display = 'inline-block';
+  } else {
+    if (prev) prev.style.display = 'none';
+    if (next) next.style.display = 'none';
+  }
+  
+  try { modal.focus(); } catch (e) {}
+}
+
 function renderModalImage() {
+  if (!modalImage) return;
+  
   const url = modalState.images[modalState.index] || '';
+  
+  // Aplica estilos antes e depois de carregar a imagem
+  applyModalImageStyles(modalImage);
+  modalImage.onload = function() {
+    applyModalImageStyles(this);
+  };
+  
   modalImage.src = url;
   modalImage.alt = `Imagem ${modalState.index + 1} de ${modalState.images.length}`;
 }
 
-function openImageModal(images = [], startIndex = 0) {
-  modalState.images = Array.isArray(images) ? images : normalizeArrayField(images);
-  modalState.index = Math.max(0, Math.min(startIndex || 0, modalState.images.length - 1));
-  modalEl.style.display = 'flex';
-  modalState.isOpen = true;
-  renderModalImage();
-  // show/hide nav based on count
-  if (modalState.images.length > 1) {
-    modalPrevBtn.style.display = 'inline-block';
-    modalNextBtn.style.display = 'inline-block';
-  } else {
-    modalPrevBtn.style.display = 'none';
-    modalNextBtn.style.display = 'none';
-  }
-  try { modalEl.focus(); } catch (e) {}
-}
-
 function closeImageModal() {
+  if (!modalEl) return;
   modalEl.style.display = 'none';
+  if (modalEl.classList) modalEl.classList.remove('open');
   modalState.images = [];
   modalState.index = 0;
   modalState.isOpen = false;
@@ -229,14 +271,16 @@ function modalNext() {
   modalState.index = (modalState.index + 1) % modalState.images.length;
   renderModalImage();
 }
+
 function modalPrev() {
   if (!modalState.images.length) return;
   modalState.index = (modalState.index - 1 + modalState.images.length) % modalState.images.length;
   renderModalImage();
 }
 
+// Adiciona event listeners para o modal
 if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeImageModal);
-modalEl.addEventListener('click', (ev) => { if (ev.target === modalEl) closeImageModal(); });
+if (modalEl) modalEl.addEventListener('click', (ev) => { if (ev.target === modalEl) closeImageModal(); });
 if (modalPrevBtn) modalPrevBtn.addEventListener('click', modalPrev);
 if (modalNextBtn) modalNextBtn.addEventListener('click', modalNext);
 
@@ -568,5 +612,569 @@ export function setupAdocao() {
     }
   } catch (err) {
     console.error('init adocao', err);
+  }
+})();
+
+/* =========================
+   Modal image size fix - versão corrigida sem bloqueio de interface
+   ========================= */
+(function setupModalImageFixes() {
+  // Adiciona estilos CSS via tag <style>, mas com seletores mais específicos
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    /* Aplicar apenas quando o modal estiver realmente aberto */
+    #imageModal.open, #adocao-modal.open, .adocao-modal.open, .modal.open {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    
+    /* Estilos para as imagens dentro dos modais */
+    #modalImage, #adocao-modal-image, .am-media, #imageModal img, #adocao-modal img {
+      max-width: 85vw !important;
+      max-height: 80vh !important;
+      width: auto !important;
+      height: auto !important;
+      object-fit: contain !important;
+      margin: auto !important;
+    }
+    
+    @media (max-width: 768px) {
+      #modalImage, #adocao-modal-image, .am-media, #imageModal img, #adocao-modal img {
+        max-width: 90vw !important;
+        max-height: 70vh !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      #modalImage, #adocao-modal-image, .am-media, #imageModal img, #adocao-modal img {
+        max-width: 95vw !important;
+        max-height: 60vh !important;
+      }
+    }
+  `;
+  document.head.appendChild(styleEl);
+
+  // Função para ajustar apenas imagens em modais ABERTOS
+  function adjustModalImages() {
+    // Encontrar apenas modais que estão realmente abertos
+    const openModals = document.querySelectorAll('#imageModal[style*="display: flex"], #adocao-modal[style*="display: flex"], .adocao-modal[style*="display: flex"], .adocao-modal.open, #imageModal.open');
+    
+    // Se não houver modais abertos, não faz nada
+    if (!openModals.length) return;
+    
+    // Ajusta imagens apenas nos modais abertos
+    openModals.forEach(modal => {
+      const images = modal.querySelectorAll('img');
+      images.forEach(img => {
+        img.style.maxWidth = '85vw';
+        img.style.maxHeight = '80vh';
+        img.style.width = 'auto';
+        img.style.height = 'auto';
+        img.style.objectFit = 'contain';
+        img.style.margin = 'auto';
+      });
+    });
+  }
+  
+  // Observer para detectar quando um modal é aberto
+  if (window.MutationObserver) {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        // Verificamos apenas mudanças de estilo e classe
+        if (mutation.type === 'attributes' && 
+            (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+          
+          const target = mutation.target;
+          
+          // Se for um modal e estiver sendo aberto
+          if ((target.id === 'imageModal' || target.id === 'adocao-modal' || 
+               target.classList.contains('adocao-modal')) && 
+              (target.style.display === 'flex' || target.style.display === 'block' ||
+               target.classList.contains('open'))) {
+            
+            // Aplicamos os ajustes
+            setTimeout(() => {
+              const images = target.querySelectorAll('img');
+              images.forEach(img => {
+                img.style.maxWidth = '85vw';
+                img.style.maxHeight = '80vh';
+                img.style.width = 'auto';
+                img.style.height = 'auto';
+                img.style.objectFit = 'contain';
+              });
+            }, 50);
+          }
+        }
+      }
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+  }
+  
+  // Aplicar quando clicado em elementos que possam abrir modais
+  document.addEventListener('click', (event) => {
+    // Detecta cliques em imagens ou botões que possam abrir modais
+    if (event.target.classList.contains('adocao-imagem') || 
+        event.target.closest('.adocao-imagem')) {
+      setTimeout(adjustModalImages, 100);
+    }
+  }, true);
+})();
+
+// Função para alternar o status de adoção (adotado/disponível)
+export async function toggleAdocaoStatus(id, statusAtual) {
+  try {
+    const novoStatus = !statusAtual;
+    const { data, error } = await supabase
+      .from('pets_adocao')
+      .update({ adotado: novoStatus })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Erro ao atualizar status:', error);
+      mostrarErro('Não foi possível atualizar o status da adoção.');
+      return false;
+    }
+    
+    mostrarSucesso(`Anúncio marcado como ${novoStatus ? 'Adotado' : 'Disponível'} com sucesso!`);
+    return true;
+  } catch (err) {
+    console.error('Toggle adoção erro:', err);
+    mostrarErro('Erro ao processar sua solicitação.');
+    return false;
+  }
+}
+
+// Função para excluir anúncio de adoção
+export async function excluirAdocao(id) {
+  try {
+    const { error } = await supabase
+      .from('pets_adocao')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Erro ao excluir anúncio:', error);
+      mostrarErro('Não foi possível excluir o anúncio.');
+      return false;
+    }
+    
+    mostrarSucesso('Anúncio excluído com sucesso!');
+    return true;
+  } catch (err) {
+    console.error('Excluir adoção erro:', err);
+    mostrarErro('Erro ao processar sua solicitação.');
+    return false;
+  }
+}
+
+// Função para buscar detalhes de um anúncio para edição
+export async function obterAdocaoParaEdicao(id) {
+  try {
+    const { data, error } = await supabase
+      .from('pets_adocao')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) {
+      console.error('Erro ao obter detalhes do anúncio:', error);
+      mostrarErro('Não foi possível carregar os detalhes do anúncio.');
+      return null;
+    }
+    
+    return data;
+  } catch (err) {
+    console.error('Obter adoção erro:', err);
+    mostrarErro('Erro ao processar sua solicitação.');
+    return null;
+  }
+}
+
+// Função para salvar anúncio editado
+export async function salvarEdicaoAdocao(id, dadosAtualizados) {
+  try {
+    const { data, error } = await supabase
+      .from('pets_adocao')
+      .update(dadosAtualizados)
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('Erro ao salvar edição:', error);
+      mostrarErro('Não foi possível salvar as alterações.');
+      return false;
+    }
+    
+    mostrarSucesso('Anúncio atualizado com sucesso!');
+    return true;
+  } catch (err) {
+    console.error('Salvar edição erro:', err);
+    mostrarErro('Erro ao processar sua solicitação.');
+    return false;
+  }
+}
+
+// Variável para controle de inicialização única do dashboard
+let dashboardInicializado = false;
+
+// Função para configurar handlers no dashboard
+export function setupDashboardAdocao() {
+  // Evitar inicialização duplicada
+  if (dashboardInicializado) return;
+  dashboardInicializado = true;
+  
+  console.log('Dashboard de adoções iniciado');
+  
+  const tabelaAdocao = document.getElementById('tabela-adocao');
+  if (!tabelaAdocao) return;
+  
+  // Buscar modal de edição
+  const modalEditAdocao = document.getElementById('modal-edit-adocao');
+  const formEditAdocao = modalEditAdocao ? document.getElementById('form-edit-adocao') : null;
+  
+  // Event delegation para botões da tabela
+  tabelaAdocao.addEventListener('click', async (event) => {
+    // Botão de toggle status
+    if (event.target.closest('.btn-toggle-adocao')) {
+      const btn = event.target.closest('.btn-toggle-adocao');
+      const id = btn.dataset.id;
+      const statusAtual = btn.dataset.status === 'true';
+      
+      if (confirm(`Confirma ${statusAtual ? 'disponibilizar' : 'marcar como adotado'} este anúncio?`)) {
+        const success = await toggleAdocaoStatus(id, statusAtual);
+        if (success) {
+          await carregarAnunciosDashboard();
+        }
+      }
+    }
+    
+    // Botão de excluir
+    else if (event.target.closest('.btn-delete-adocao')) {
+      const btn = event.target.closest('.btn-delete-adocao');
+      const id = btn.dataset.id;
+      
+      if (confirm('Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.')) {
+        const success = await excluirAdocao(id);
+        if (success) {
+          await carregarAnunciosDashboard();
+        }
+      }
+    }
+    
+    // Botão de editar
+    else if (event.target.closest('.btn-edit-adocao')) {
+      const btn = event.target.closest('.btn-edit-adocao');
+      const id = btn.dataset.id;
+      
+      await abrirModalEdicao(id);
+    }
+  });
+  
+  // Função para abrir o modal de edição
+  async function abrirModalEdicao(id) {
+    // Se não temos o modal ou o form, vamos criar um
+    if (!modalEditAdocao || !formEditAdocao) {
+      console.error("Modal de edição não encontrado! Criando um temporário.");
+      criarModalEdicao();
+      return; // Após criar, recarregue a página
+    }
+    
+    // Buscar dados do anúncio
+    const anuncio = await obterAdocaoParaEdicao(id);
+    if (!anuncio) return;
+    
+    console.log("Abrindo modal com dados:", anuncio);
+    
+    // Preencher formulário
+    if (formEditAdocao.querySelector('#edit-nome-pet'))
+      formEditAdocao.querySelector('#edit-nome-pet').value = getField(anuncio, 'nome_pet', 'nomePet') || '';
+    
+    if (formEditAdocao.querySelector('#edit-idade-pet'))
+      formEditAdocao.querySelector('#edit-idade-pet').value = getField(anuncio, 'idadePet', 'idade_pet') || '';
+    
+    if (formEditAdocao.querySelector('#edit-cidade'))
+      formEditAdocao.querySelector('#edit-cidade').value = anuncio.cidade || '';
+    
+    if (formEditAdocao.querySelector('#edit-tutor-nome'))
+      formEditAdocao.querySelector('#edit-tutor-nome').value = getField(anuncio, 'tutorNome', 'tutor_nome') || '';
+    
+    if (formEditAdocao.querySelector('#edit-tutor-telefone'))
+      formEditAdocao.querySelector('#edit-tutor-telefone').value = getField(anuncio, 'tutorTelefone', 'tutor_telefone') || '';
+    
+    if (formEditAdocao.querySelector('#edit-tutor-email'))
+      formEditAdocao.querySelector('#edit-tutor-email').value = getField(anuncio, 'tutorEmail', 'tutor_email') || '';
+    
+    if (formEditAdocao.querySelector('#edit-observacoes'))
+      formEditAdocao.querySelector('#edit-observacoes').value = anuncio.observacoes || '';
+    
+    // Status adotado
+    const selectStatus = formEditAdocao.querySelector('#edit-status');
+    if (selectStatus) {
+      selectStatus.value = anuncio.adotado ? 'adotado' : 'disponivel';
+    }
+    
+    // Mostrar previews das imagens existentes
+    const fotosPreview = formEditAdocao.querySelector('#edit-adocao-fotos-preview');
+    if (fotosPreview) {
+      fotosPreview.innerHTML = '';
+      
+      const imagens = normalizeArrayField(getField(anuncio, 'imagens_url_arr', 'imagens_url', 'imagensURL_arr') || anuncio.fotos);
+      if (imagens && imagens.length) {
+        imagens.forEach((url, index) => {
+          const previewItem = document.createElement('div');
+          previewItem.classList.add('preview-item');
+          previewItem.innerHTML = `
+            <div class="preview-image-wrapper">
+              <img src="${escapeHtml(url)}" alt="Imagem ${index+1}" class="preview-image-thumbnail">
+              <button type="button" class="btn-remove-foto" data-url="${escapeHtml(url)}" title="Remover foto">&times;</button>
+            </div>
+          `;
+          fotosPreview.appendChild(previewItem);
+        });
+      }
+    }
+    
+    // Armazenar ID para o salvamento
+    formEditAdocao.dataset.adocaoId = id;
+    
+    // Abrir o modal
+    modalEditAdocao.style.display = 'block';
+    
+    // Handler para remover imagens
+    const btnRemoveFotos = formEditAdocao.querySelectorAll('.btn-remove-foto');
+    btnRemoveFotos.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const url = this.dataset.url;
+        this.closest('.preview-item').remove();
+      });
+    });
+    
+    // Handler para upload de novas fotos
+    const noveFotosInput = formEditAdocao.querySelector('#edit-fotos');
+    const noveFotosPreview = formEditAdocao.querySelector('#edit-novas-fotos-preview');
+    
+    if (noveFotosInput && noveFotosPreview) {
+      noveFotosInput.value = ''; // Limpar input anterior
+      noveFotosPreview.innerHTML = ''; // Limpar preview anterior
+      
+      noveFotosInput.addEventListener('change', () => {
+        noveFotosPreview.innerHTML = '';
+        const files = noveFotosInput.files;
+        for (const file of files) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const previewItem = document.createElement('div');
+            previewItem.classList.add('preview-item');
+            previewItem.innerHTML = `
+              <img src="${e.target.result}" alt="${file.name}" class="preview-image-thumbnail">
+              <span class="preview-file-name">${file.name}</span>
+            `;
+            noveFotosPreview.appendChild(previewItem);
+          }
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  }
+  
+  // Função para criar modal de edição se não existir
+  function criarModalEdicao() {
+    // Se o modal já existe, não crie outro
+    if (document.getElementById('modal-edit-adocao')) return;
+    
+    // Criar elemento do modal
+    const modalEl = document.createElement('div');
+    modalEl.id = 'modal-edit-adocao';
+    modalEl.className = 'modal-admin';
+    modalEl.innerHTML = `
+      <div class="modal-admin-content">
+        <span class="close-modal-admin">&times;</span>
+        <h2>Editar Anúncio de Adoção</h2>
+        <form id="form-edit-adocao" class="dashboard-form">
+          <div class="form-group">
+            <label for="edit-nome-pet">Nome do Pet</label>
+            <input type="text" id="edit-nome-pet" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-idade-pet">Idade do Pet</label>
+            <input type="text" id="edit-idade-pet">
+          </div>
+          <div class="form-group">
+            <label for="edit-cidade">Cidade</label>
+            <input type="text" id="edit-cidade">
+          </div>
+          <div class="form-group">
+            <label for="edit-tutor-nome">Nome do Tutor/Responsável</label>
+            <input type="text" id="edit-tutor-nome" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-tutor-telefone">Telefone do Tutor</label>
+            <input type="tel" id="edit-tutor-telefone" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-tutor-email">Email do Tutor</label>
+            <input type="email" id="edit-tutor-email">
+          </div>
+          <div class="form-group">
+            <label for="edit-status">Status</label>
+            <select id="edit-status" required>
+              <option value="disponivel">Disponível</option>
+              <option value="adotado">Adotado</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="edit-observacoes">Observações</label>
+            <textarea id="edit-observacoes" rows="4"></textarea>
+          </div>
+          
+          <!-- Fotos existentes -->
+          <div class="form-group full-width">
+            <label>Fotos Atuais</label>
+            <div id="edit-adocao-fotos-preview" class="preview-container"></div>
+          </div>
+          
+          <!-- Novas fotos -->
+          <div class="form-group full-width">
+            <label for="edit-fotos">Adicionar Novas Fotos</label>
+            <input type="file" id="edit-fotos" multiple accept="image/*">
+            <div id="edit-novas-fotos-preview" class="preview-container"></div>
+          </div>
+          
+          <div class="form-group full-width">
+            <button type="submit" class="btn-principal">Salvar Alterações</button>
+          </div>
+        </form>
+      </div>
+    `;
+    
+    // Adicionar ao final do body
+    document.body.appendChild(modalEl);
+    
+    // Após adicionar, mostrar alerta para o usuário
+    mostrarSucesso("Modal de edição adicionado! Por favor, tente editar novamente.");
+    
+    // Reconfigurar o dashboard após adicionar
+    setupDashboardAdocao();
+  }
+  
+  // Setup do formulário de edição
+  if (formEditAdocao) {
+    // Remover listeners antigos para evitar duplicidade
+    const clonedForm = formEditAdocao.cloneNode(true);
+    formEditAdocao.parentNode.replaceChild(clonedForm, formEditAdocao);
+    
+    // Adicionar novo listener
+    clonedForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const id = this.dataset.adocaoId;
+      if (!id) {
+        mostrarErro('ID do anúncio não encontrado.');
+        return;
+      }
+      
+      const submitBtn = this.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Salvando...';
+      }
+      
+      // Pegar imagens existentes que não foram removidas
+      const fotosPreview = this.querySelector('#edit-adocao-fotos-preview');
+      const imagensExistentes = Array.from(fotosPreview.querySelectorAll('.preview-image-thumbnail'))
+        .map(img => img.src)
+        .filter(url => url.startsWith('http')); // Filtra apenas URLs reais
+      
+      // Fazer upload das novas imagens (se houver)
+      const novasFotos = this.querySelector('#edit-fotos');
+      let novasFotosUrls = [];
+      
+      if (novasFotos && novasFotos.files.length > 0) {
+        try {
+          novasFotosUrls = await uploadFilesToStorage(novasFotos.files, {
+            bucket: 'petshop-assets',
+            folder: 'adocao_fotos'
+          });
+        } catch (error) {
+          console.error('Erro ao fazer upload de novas fotos', error);
+          mostrarErro('Não foi possível fazer upload das novas fotos.');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Salvar Alterações';
+          }
+          return;
+        }
+      }
+      
+      // Combinando imagens existentes com novas
+      const todasImagens = [...imagensExistentes, ...novasFotosUrls];
+      
+      // Preparar dados atualizados
+      const dadosAtualizados = {
+        nome_pet: this.querySelector('#edit-nome-pet').value,
+        idadePet: this.querySelector('#edit-idade-pet').value,
+        cidade: this.querySelector('#edit-cidade').value,
+        tutorNome: this.querySelector('#edit-tutor-nome').value,
+        tutorTelefone: this.querySelector('#edit-tutor-telefone').value,
+        tutorEmail: this.querySelector('#edit-tutor-email').value,
+        observacoes: this.querySelector('#edit-observacoes').value,
+        adotado: this.querySelector('#edit-status').value === 'adotado',
+        imagens_url_arr: todasImagens
+      };
+      
+      // Salvar alterações
+      const success = await salvarEdicaoAdocao(id, dadosAtualizados);
+      
+      if (success) {
+        // Fechar modal
+        modalEditAdocao.style.display = 'none';
+        // Recarregar tabela
+        await carregarAnunciosDashboard();
+      }
+      
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Salvar Alterações';
+      }
+    });
+  }
+  
+  // Setup botões de fechar modal
+  const closeButtons = document.querySelectorAll('.close-modal-admin');
+  closeButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const modal = this.closest('.modal-admin');
+      if (modal) modal.style.display = 'none';
+    });
+  });
+  
+  // Fechar modal clicando fora
+  window.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-admin')) {
+      e.target.style.display = 'none';
+    }
+  });
+  
+  // Inicializar carregamento da tabela
+  carregarAnunciosDashboard();
+}
+
+/* auto init para dashboard.html - com garantia de execução única */
+(function initDashboard() {
+  // Verificar se estamos na página dashboard com a tabela de adoção
+  const isDashboard = document.getElementById('tabela-adocao') !== null;
+  if (isDashboard) {
+    console.log("Página de dashboard detectada - inicializando gerenciamento de adoções");
+    setupDashboardAdocao();
   }
 })();

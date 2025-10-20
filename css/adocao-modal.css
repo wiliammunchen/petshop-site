@@ -17,16 +17,37 @@
   --btn-size: 44px;
 }
 
-.adocao-modal, #adocao-modal {
+.adocao-modal, #imageModal, #adocao-modal {
+  display: none;
   position: fixed;
   inset: 0;
-  display: none;
+  z-index: 2000;
+  background-color: rgba(0,0,0,0.85);
   align-items: center;
   justify-content: center;
-  z-index: 1100;
-  font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: auto;
 }
-.adocao-modal.open, #adocao-modal.open { display: flex; }
+
+.adocao-modal.open, #imageModal.open, #adocao-modal.open {
+  display: flex !important;
+}
+
+/* Seletores abrangentes para garantir que pegue qualquer variação */
+.adocao-modal img, 
+#imageModal img, 
+#adocao-modal img,
+#modalImage,
+.am-media,
+.modal-content img {
+  max-width: 85vw !important;
+  max-height: 80vh !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  margin: auto;
+}
 
 /* backdrop */
 .adocao-modal .am-backdrop, #adocao-modal .am-backdrop {
@@ -111,14 +132,14 @@
 .adocao-modal .am-media,
 #adocao-modal .am-media,
 #adocao-modal-image,
-#adocao-modal img.am-media,
-.adocao-modal img.am-media {
-  max-width: 75vw;        /* reduced ~20% */
-  max-height: 56vh;       /* reduced ~20% */
-  object-fit: contain;
+.modal-content img {
+  max-width: 85vw;        /* Reduzido para garantir margem em todos os lados */
+  max-height: 80vh;       /* Reduzido para não ultrapassar a altura da tela */
+  width: auto;            /* Mantém proporção */
+  height: auto;           /* Mantém proporção */
+  object-fit: contain;    /* Garante que a imagem não seja cortada */
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  transition: transform .18s ease;
   box-shadow: 0 8px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
 }
 
@@ -310,6 +331,37 @@
 @media (max-width: 780px) {
   .adocao-card { grid-template-columns: 1fr; }
   .card-imagem-container { height: 200px; }
+}
+
+@media (max-width: 768px) {
+  .adocao-modal .am-media,
+  #adocao-modal .am-media,
+  #adocao-modal-image,
+  .modal-content img {
+    max-width: 90vw;
+    max-height: 70vh;
+  }
+  
+  .adocao-modal .am-panel, 
+  #adocao-modal .am-panel {
+    width: 98%;
+    margin: 5px;
+  }
+  
+  .adocao-modal .am-body, 
+  #adocao-modal .am-body {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adocao-modal .am-media,
+  #adocao-modal .am-media,
+  #adocao-modal-image,
+  .modal-content img {
+    max-width: 95vw;
+    max-height: 60vh;
+  }
 }
 
 /* end of adocao-modal.css */
