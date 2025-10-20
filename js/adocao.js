@@ -1069,12 +1069,8 @@ export function setupDashboardAdocao() {
   
   // Setup do formulário de edição
   if (formEditAdocao) {
-    // Remover listeners antigos para evitar duplicidade
-    const clonedForm = formEditAdocao.cloneNode(true);
-    formEditAdocao.parentNode.replaceChild(clonedForm, formEditAdocao);
-    
-    // Adicionar novo listener
-    clonedForm.addEventListener('submit', async function(e) {
+    // Adicionar listener para submit do formulário
+    formEditAdocao.addEventListener('submit', async function(e) {
       e.preventDefault();
       
       const id = this.dataset.adocaoId;

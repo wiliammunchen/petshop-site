@@ -8,7 +8,7 @@ import { setupCadastros } from './cadastros.js';
 import { supabase } from './supabase-config.js';
 import { setupAgendamentos } from './agendamentos.js';
 import { setupDashboard } from './dashboard.js';
-import { setupAdocao } from './adocao.js';
+import { setupAdocao, setupDashboardAdocao } from './adocao.js';
 import { setupServicosPublicos } from './servicos.js';
 import { setupRelatorios } from './relatorios.js';
 import { setupBackup } from './backup.js';
@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             setupAgendamentos();
             setupRelatorios();
             setupAdocao(); 
+            setupDashboardAdocao(); // Setup dashboard adoption handlers for buttons
             setupBackup();
             
 
