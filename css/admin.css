@@ -776,6 +776,7 @@ html {
     position: relative; /* Garante que o botão absoluto fique dentro deste container */
 }
 
+/* Button to remove photos from preview (used in service and adoption forms) */
 .btn-delete-foto-servico,
 .btn-remove-foto {
     position: absolute;
