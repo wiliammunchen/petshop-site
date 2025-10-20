@@ -1168,13 +1168,3 @@ export function setupDashboardAdocao() {
   // Inicializar carregamento da tabela
   carregarAnunciosDashboard();
 }
-
-/* auto init para dashboard.html - com garantia de execução única */
-(function initDashboard() {
-  // Verificar se estamos na página dashboard com a tabela de adoção
-  const isDashboard = document.getElementById('tabela-adocao') !== null;
-  if (isDashboard) {
-    console.log("Página de dashboard detectada - inicializando gerenciamento de adoções");
-    setupDashboardAdocao();
-  }
-})();

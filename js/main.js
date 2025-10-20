@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             setupRelatorios();
             setupAdocao(); 
             setupBackup();
+            
 
             // IMPORTANTE: Garantir que a tabela do dashboard seja populada
             // Importa dinamicamente adocao.js e chama carregarAnunciosDashboard
