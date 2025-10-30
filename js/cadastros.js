@@ -1,5 +1,3 @@
-// petshop-site/js/cadastros.js (VERSÃO CORRIGIDA)
-
 import { supabase } from './supabase-config.js';
 import { mostrarSucesso, mostrarErro } from './notificacoes.js';
 

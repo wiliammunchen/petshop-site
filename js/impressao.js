@@ -1,13 +1,15 @@
+// petshop-site/js/impressao.js
+// Ajustado selects para usar nomes do banco (snake_case) e normalização de estruturas.
+
 import { supabase } from './supabase-config.js';
 
 export async function gerarImpressaoAgendamento(agendamentoId) {
-    // Query corrigida para buscar a forma de pagamento
     const { data: ag, error } = await supabase
         .from('agendamentos')
         .select(`
-            *, 
-            tipo_entrega, 
-            clientes (*), 
+            *,
+            tipo_entrega,
+            clientes (*),
             formas_pagamento (nome),
             agendamento_detalhes (*, pets (*), servicos (id, nome, valor, tipo_servico))
         `)
@@ -22,15 +24,10 @@ export async function gerarImpressaoAgendamento(agendamentoId) {
 
     const dataHora = new Date(ag.data_hora_inicio);
 
-    // Agrupa os serviços por pet
     const petsComServicos = {};
-    ag.agendamento_detalhes.forEach(detalhe => {
+    (ag.agendamento_detalhes || []).forEach(detalhe => {
         if (!petsComServicos[detalhe.pet_id]) {
-            petsComServicos[detalhe.pet_id] = {
-                nome: detalhe.pets.nome,
-                raca: detalhe.pets.raca,
-                servicos: []
-            };
+            petsComServicos[detalhe.pet_id] = { nome: detalhe.pets?.nome || 'Pet Removido', raca: detalhe.pets?.raca, servicos: [] };
         }
         petsComServicos[detalhe.pet_id].servicos.push(detalhe.servicos);
     });
@@ -43,10 +40,7 @@ export async function gerarImpressaoAgendamento(agendamentoId) {
             <div class="card-body">
                 <table class="servicos-table">
                     <thead>
-                        <tr>
-                            <th>Serviço Realizado</th>
-                            <th class="valor">Valor</th>
-                        </tr>
+                        <tr><th>Serviço Realizado</th><th class="valor">Valor</th></tr>
                     </thead>
                     <tbody>
                         ${pet.servicos.map(s => `
@@ -93,9 +87,9 @@ export async function gerarImpressaoAgendamento(agendamentoId) {
                                 <h3><i class="fas fa-user"></i> Dados do Cliente</h3>
                             </div>
                             <div class="card-body">
-                                <p><strong>Nome:</strong> ${ag.clientes.nome}</p>
-                                <p><strong>Telefone:</strong> ${ag.clientes.telefone || 'Não informado'}</p>
-                                <p><strong>Endereço:</strong> ${ag.clientes.endereco || 'Não informado'}, ${ag.clientes.bairro || ''}</p>
+                                <p><strong>Nome:</strong> ${ag.clientes?.nome}</p>
+                                <p><strong>Telefone:</strong> ${ag.clientes?.telefone || 'Não informado'}</p>
+                                <p><strong>Endereço:</strong> ${ag.clientes?.endereco || 'Não informado'}, ${ag.clientes?.bairro || ''}</p>
                             </div>
                         </div>
                         <div class="card-os">
@@ -119,18 +113,14 @@ export async function gerarImpressaoAgendamento(agendamentoId) {
                     </div>
                     <div class="os-signature">
                         <div class="signature-line"></div>
-                        <p>${ag.clientes.nome}</p>
+                        <p>${ag.clientes?.nome}</p>
                         <span>Assinatura do Responsável</span>
                     </div>
                 </div>
 
-                 <div class="print-footer">
-                    Espaço PetShop - O cuidado que seu melhor amigo merece.
-                </div>
+                <div class="print-footer">Espaço PetShop - O cuidado que seu melhor amigo merece.</div>
             </div>
-             <div class="print-note no-print">
-                <p>Use o atalho Ctrl+P (ou Cmd+P no Mac) para imprimir.</p>
-            </div>
+            <div class="print-note no-print"><p>Use o atalho Ctrl+P (ou Cmd+P no Mac) para imprimir.</p></div>
         </body>
         </html>
     `;

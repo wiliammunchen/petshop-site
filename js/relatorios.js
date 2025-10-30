@@ -53,13 +53,14 @@ function setupDateFilters(formId) {
     const dataInicioInput = form.querySelector('input[id*="-data-inicio"]');
     const dataFimInput = form.querySelector('input[id*="-data-fim"]');
 
+    if (!periodoSelect) return;
     periodoSelect.addEventListener('change', () => {
         const isPersonalizado = periodoSelect.value === 'personalizado';
-        dataInicioInput.disabled = !isPersonalizado;
-        dataFimInput.disabled = !isPersonalizado;
+        if (dataInicioInput) dataInicioInput.disabled = !isPersonalizado;
+        if (dataFimInput) dataFimInput.disabled = !isPersonalizado;
         if (!isPersonalizado) {
-            dataInicioInput.value = '';
-            dataFimInput.value = '';
+            if (dataInicioInput) dataInicioInput.value = '';
+            if (dataFimInput) dataFimInput.value = '';
         }
     });
 }
@@ -73,6 +74,10 @@ function imprimirConteudo(elementId, tituloRelatorio, periodoTexto) {
     }
 
     const printWindow = window.open('', '_blank', 'height=800,width=800');
+    if (!printWindow) {
+        alert('Não foi possível abrir a janela de impressão. Verifique se pop-ups estão bloqueados.');
+        return;
+    }
     
     printWindow.document.write('<html><head><title>Imprimir - ' + tituloRelatorio + '</title>');
     printWindow.document.write('<link rel="stylesheet" href="css/impressao.css" type="text/css" media="all">');
@@ -81,10 +86,10 @@ function imprimirConteudo(elementId, tituloRelatorio, periodoTexto) {
     // --- NOVO CABEÇALHO PADRÃO ---
     printWindow.document.write(`
         <div class="print-header">
-            <img src="images/logo-petshop.png" alt="Logo Espaço PetShop">
-            <div>
-                <h1>${tituloRelatorio}</h1>
-                <h2>${periodoTexto}</h2>
+            <img src="images/logo-petshop.png" alt="Logo Espaço PetShop" style="height:60px;margin-right:12px;">
+            <div style="display:inline-block; vertical-align: middle;">
+                <h1 style="margin:0; font-size:18px;">${tituloRelatorio}</h1>
+                <h2 style="margin:0; font-size:12px; font-weight: 400;">${periodoTexto || ''}</h2>
             </div>
         </div>
     `);
@@ -108,12 +113,16 @@ function imprimirConteudo(elementId, tituloRelatorio, periodoTexto) {
 }
 
 function getPeriodoDescricao(form) {
+    if (!form) return '';
     const periodoSelect = form.querySelector('select[id*="-periodo"]');
+    if (!periodoSelect) return '';
     const periodo = periodoSelect.value;
-    const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
-    const dataFim = form.querySelector('input[id*="-data-fim"]').value;
+    const dataInicioInput = form.querySelector('input[id*="-data-inicio"]');
+    const dataFimInput = form.querySelector('input[id*="-data-fim"]');
+    const dataInicio = dataInicioInput ? dataInicioInput.value : '';
+    const dataFim = dataFimInput ? dataFimInput.value : '';
 
-    let descricao = periodoSelect.options[periodoSelect.selectedIndex].text;
+    let descricao = periodoSelect.options[periodoSelect.selectedIndex]?.text || periodo;
     if (periodo === 'personalizado' && dataInicio && dataFim) {
         const dataInicioFormatada = new Date(dataInicio + 'T12:00:00').toLocaleDateString('pt-BR');
         const dataFimFormatada = new Date(dataFim + 'T12:00:00').toLocaleDateString('pt-BR');
@@ -129,26 +138,30 @@ function getPeriodoDescricao(form) {
 async function gerarRelatorioAgendamentosPorPeriodo(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-agendamentos-periodo');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório...</p>';
 
     const form = document.getElementById('form-filtro-agendamentos-periodo');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select[id*="-periodo"]').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
-    const status = document.getElementById('agendamentos-periodo-status').value;
+    const statusEl = document.getElementById('agendamentos-periodo-status');
+    const status = statusEl ? statusEl.value : 'todos';
     
     const { start, end } = getPeriodRange(periodo, dataInicio, dataFim);
 
     let query = supabase
         .from('agendamentos')
-        .select('id', { count: 'exact' })
+        .select('id', { count: 'exact', head: true })
         .gte('data_hora_inicio', start)
         .lte('data_hora_inicio', end);
 
     if (status !== 'todos') {
         query = query.eq('status', status);
     } else {
-        query = query.not('status', 'eq', 'Cancelado');
+        // evita considerar status cancelado (variações de capitalização)
+        query = query.not('status', 'in', '("cancelado","Cancelado","CANCELADO")');
     }
 
     const { count, error } = await query;
@@ -160,14 +173,14 @@ async function gerarRelatorioAgendamentosPorPeriodo(e) {
 
     resultadoDiv.innerHTML = `
         <div class="header-actions no-print">
-            <h3>Total de Agendamentos: ${count}</h3>
+            <h3>Total de Agendamentos: ${count ?? 0}</h3>
             <button class="btn-secondary btn-print" data-print-target="resultado-agendamentos-periodo" title="Imprimir Relatório"><i class="fas fa-print"></i> Imprimir</button>
         </div>
         <div class="info-card">
             <div class="card-icon" style="background-color: #dbeafe; color: #3b82f6;"><i class="fas fa-calendar-alt"></i></div>
             <div class="card-content">
                 <h3>Total de Agendamentos</h3>
-                <p>${count}</p>
+                <p>${count ?? 0}</p>
             </div>
         </div>
     `;
@@ -176,9 +189,11 @@ async function gerarRelatorioAgendamentosPorPeriodo(e) {
 async function gerarRelatorioServicosMaisRealizados(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-servicos-mais-realizados');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório...</p>';
 
     const form = document.getElementById('form-filtro-servicos-mais-realizados');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -196,8 +211,8 @@ async function gerarRelatorioServicosMaisRealizados(e) {
         return;
     }
 
-    const contagem = data
-        .flatMap(agendamento => agendamento.agendamento_detalhes)
+    const contagem = (data || [])
+        .flatMap(agendamento => agendamento.agendamento_detalhes || [])
         .reduce((acc, detalhe) => {
             const nomeServico = detalhe.servicos?.nome || "Serviço Removido";
             acc[nomeServico] = (acc[nomeServico] || 0) + 1;
@@ -247,9 +262,11 @@ async function gerarRelatorioServicosMaisRealizados(e) {
 async function gerarRelatorioTaxaComparecimento(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-taxa-comparecimento');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório...</p>';
 
     const form = document.getElementById('form-filtro-taxa-comparecimento');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -266,8 +283,8 @@ async function gerarRelatorioTaxaComparecimento(e) {
         return;
     }
 
-    const realizados = data.realizados;
-    const faltas = data.faltas;
+    const realizados = Number(data?.realizados || 0);
+    const faltas = Number(data?.faltas || 0);
     const total = realizados + faltas;
     const taxa = total > 0 ? (realizados / total) * 100 : 0;
 
@@ -288,10 +305,10 @@ async function gerarRelatorioTempoMedio(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-tempo-medio-servico');
     if (!resultadoDiv) return;
-    
     resultadoDiv.innerHTML = '<p>Calculando tempo médio real dos serviços...</p>';
     
     const form = document.getElementById('form-filtro-tempo-medio-servico');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -355,9 +372,11 @@ async function gerarRelatorioTempoMedio(e) {
 async function gerarRelatorioFaturamentoPorServico(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-faturamento-servico');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório...</p>';
 
     const form = document.getElementById('form-filtro-faturamento-servico');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -369,7 +388,7 @@ async function gerarRelatorioFaturamentoPorServico(e) {
     });
 
     if (error) { resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`; return; }
-    if (data.length === 0) { resultadoDiv.innerHTML = '<p>Nenhum faturamento no período para serviços realizados.</p>'; return; }
+    if (!data || data.length === 0) { resultadoDiv.innerHTML = '<p>Nenhum faturamento no período para serviços realizados.</p>'; return; }
 
     const tableRows = data.map(item => `
         <tr>
@@ -395,9 +414,11 @@ async function gerarRelatorioFaturamentoPorServico(e) {
 async function gerarRelatorioTicketMedio(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-ticket-medio');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório...</p>';
 
     const form = document.getElementById('form-filtro-ticket-medio');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -411,8 +432,8 @@ async function gerarRelatorioTicketMedio(e) {
 
     if (error) { resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`; return; }
     
-    const totalFaturado = data.reduce((sum, item) => sum + item.valor_cobrado, 0);
-    const numeroDeVendas = data.length;
+    const totalFaturado = (data || []).reduce((sum, item) => sum + Number(item.valor_cobrado || 0), 0);
+    const numeroDeVendas = (data || []).length;
     const ticketMedio = numeroDeVendas > 0 ? totalFaturado / numeroDeVendas : 0;
 
     resultadoDiv.innerHTML = `
@@ -431,13 +452,15 @@ async function gerarRelatorioTicketMedio(e) {
 async function gerarRelatorioReceitasPeriodo(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-receitas-periodo');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório...</p>';
     
     const form = document.getElementById('form-filtro-receitas-periodo');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodoDescricao = getPeriodoDescricao(form); // LINHA ADICIONADA
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
-    const dataFim = form.querySelector('input[id*="-data-fim"]').value; // Verifique se esta linha também foi corrigida
+    const dataFim = form.querySelector('input[id*="-data-fim"]').value;
     const { start, end } = getPeriodRange(periodo, dataInicio, dataFim);
     
     const { data, error } = await supabase
@@ -448,8 +471,8 @@ async function gerarRelatorioReceitasPeriodo(e) {
 
     if (error) { resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`; return; }
     
-    const faturamentoTotal = data.reduce((sum, item) => sum + item.valor_cobrado, 0);
-    const numeroVendas = data.length;
+    const faturamentoTotal = (data || []).reduce((sum, item) => sum + Number(item.valor_cobrado || 0), 0);
+    const numeroVendas = (data || []).length;
 
     resultadoDiv.innerHTML = `
         <div class="header-actions no-print">
@@ -468,9 +491,11 @@ async function gerarRelatorioReceitasPeriodo(e) {
 async function gerarRelatorioLucroReal(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-lucro-real');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Calculando lucro real...</p>';
 
     const form = document.getElementById('form-filtro-lucro-real');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -486,7 +511,7 @@ async function gerarRelatorioLucroReal(e) {
         return;
     }
     // Cria um mapa para fácil acesso: { "Nome do Bairro": valor }
-    const mapaValoresTransporte = new Map(bairros.map(b => [b.nome, b.valor_tele_busca]));
+    const mapaValoresTransporte = new Map((bairros || []).map(b => [b.nome, b.valor_tele_busca]));
 
     // 2. Pega os agendamentos realizados no período com os dados necessários
     const { data: agendamentos, error } = await supabase
@@ -506,7 +531,7 @@ async function gerarRelatorioLucroReal(e) {
         return;
     }
 
-    if (agendamentos.length === 0) {
+    if (!agendamentos || agendamentos.length === 0) {
         resultadoDiv.innerHTML = '<p>Nenhum agendamento realizado encontrado no período para calcular o lucro.</p>';
         return;
     }
@@ -516,20 +541,21 @@ async function gerarRelatorioLucroReal(e) {
     let totalTaxasCartao = 0;
     let totalTransporte = 0;
 
-    agendamentos.forEach(ag => {
-        faturamentoBrutoTotal += ag.valor_cobrado || 0;
+    (agendamentos || []).forEach(ag => {
+        faturamentoBrutoTotal += Number(ag.valor_cobrado || 0);
 
         let valorTransporte = 0;
-        if (ag.tipo_entrega === 'Busca-e-Entrega' && ag.clientes?.bairro) {
+        if ((ag.tipo_entrega === 'Busca-e-Entrega' || ag.tipo_entrega === 'Busca e Entrega') && ag.clientes?.bairro) {
             // Usa o mapa para encontrar o valor do transporte
             valorTransporte = mapaValoresTransporte.get(ag.clientes.bairro) || 0;
-            totalTransporte += valorTransporte;
+            totalTransporte += Number(valorTransporte || 0);
         }
 
-        const valorServicos = (ag.valor_cobrado || 0) - valorTransporte;
+        const valorServicos = Number(ag.valor_cobrado || 0) - Number(valorTransporte || 0);
         
-        if (ag.formas_pagamento && ag.formas_pagamento.taxa_percentual > 0) {
-            const taxa = (ag.formas_pagamento.taxa_percentual / 100);
+        const taxaPercent = Number(ag.formas_pagamento?.taxa_percentual || 0);
+        if (taxaPercent > 0) {
+            const taxa = (taxaPercent / 100);
             totalTaxasCartao += valorServicos * taxa;
         }
     });
@@ -581,9 +607,11 @@ async function gerarRelatorioLucroReal(e) {
 async function gerarRelatorioClientesFrequentes(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-clientes-frequentes');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando ranking...</p>';
 
     const form = document.getElementById('form-filtro-clientes-frequentes');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -595,7 +623,7 @@ async function gerarRelatorioClientesFrequentes(e) {
     });
 
     if (error) { resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`; return; }
-    if (data.length === 0) { resultadoDiv.innerHTML = '<p>Nenhum agendamento encontrado no período.</p>'; return; }
+    if (!data || data.length === 0) { resultadoDiv.innerHTML = '<p>Nenhum agendamento encontrado no período.</p>'; return; }
 
     const tableRows = data.map((item, index) => `
         <tr>
@@ -621,9 +649,11 @@ async function gerarRelatorioClientesFrequentes(e) {
 async function gerarRelatorioNovosClientes(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-novos-clientes');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório...</p>';
 
     const form = document.getElementById('form-filtro-novos-clientes');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -631,7 +661,7 @@ async function gerarRelatorioNovosClientes(e) {
 
     const { count, error } = await supabase
         .from('clientes')
-        .select('id', { count: 'exact' })
+        .select('id', { count: 'exact', head: true })
         .gte('created_at', start)
         .lte('created_at', end);
 
@@ -646,7 +676,7 @@ async function gerarRelatorioNovosClientes(e) {
             <div class="card-icon" style="background-color: #f5f3ff; color: #8b5cf6;"><i class="fas fa-user-plus"></i></div>
             <div class="card-content">
                 <h3>Novos Clientes no Período</h3>
-                <p>${count}</p>
+                <p>${count ?? 0}</p>
             </div>
         </div>`;
 }
@@ -655,9 +685,11 @@ async function gerarRelatorioNovosClientes(e) {
 async function gerarRelatorioConsumoServico(e) {
     e.preventDefault();
     const resultadoDiv = document.getElementById('resultado-consumo-servico');
+    if (!resultadoDiv) return;
     resultadoDiv.innerHTML = '<p>Gerando relatório de consumo...</p>';
 
     const form = document.getElementById('form-filtro-consumo-servico');
+    if (!form) { resultadoDiv.innerHTML = '<p>Formulário não encontrado.</p>'; return; }
     const periodo = form.querySelector('select').value;
     const dataInicio = form.querySelector('input[id*="-data-inicio"]').value;
     const dataFim = form.querySelector('input[id*="-data-fim"]').value;
@@ -669,13 +701,13 @@ async function gerarRelatorioConsumoServico(e) {
     });
 
     if (error) { resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`; return; }
-    if (data.length === 0) { resultadoDiv.innerHTML = '<p>Nenhum consumo de insumo registrado para serviços realizados no período.</p>'; return; }
+    if (!data || data.length === 0) { resultadoDiv.innerHTML = '<p>Nenhum consumo de insumo registrado para serviços realizados no período.</p>'; return; }
     
     const tableRows = data.map(item => `
         <tr>
             <td>${item.nome_produto}</td>
-            <td>${item.total_consumido.toFixed(4)} ${item.unidade_medida || ''}</td>
-            <td>${formatCurrency(item.custo_total)}</td>
+            <td>${Number(item.total_consumido || 0).toFixed(4)} ${item.unidade_medida || ''}</td>
+            <td>${formatCurrency(item.custo_total || 0)}</td>
         </tr>
     `).join('');
 
@@ -703,7 +735,7 @@ async function gerarRelatorioReposicao() {
 
     if (error) { resultadoDiv.innerHTML = `<p class="error">Erro: ${error.message}</p>`; return; }
     
-    if (data.length === 0) { resultadoDiv.innerHTML = `
+    if (!data || data.length === 0) { resultadoDiv.innerHTML = `
         <div class="header-actions no-print">
             <h3>Reposição Necessária</h3>
             <button class="btn-secondary btn-print" data-print-target="resultado-reposicao" title="Imprimir Relatório"><i class="fas fa-print"></i> Imprimir</button>
@@ -754,7 +786,7 @@ export function setupRelatorios() {
             return;
         }
 
-        clientesComPetsCache = data;
+        clientesComPetsCache = data || [];
         selectCliente.innerHTML = '<option value="">Selecione um cliente</option>';
         clientesComPetsCache.forEach(cliente => {
             // Adiciona apenas clientes que têm pets cadastrados
@@ -767,13 +799,14 @@ export function setupRelatorios() {
     function popularPetsDoCliente(clienteId) {
         const selectPet = document.getElementById('historico-selecionar-pet');
         const resultadoDiv = document.getElementById('resultado-historico-pet');
+        if (!selectPet || !resultadoDiv) return;
         
         selectPet.innerHTML = '<option value="">Selecione um pet</option>';
         resultadoDiv.innerHTML = '<p>Selecione um cliente e um pet para ver o histórico.</p>';
         
-        const clienteSelecionado = clientesComPetsCache.find(c => c.id == clienteId);
+        const clienteSelecionado = (clientesComPetsCache || []).find(c => String(c.id) === String(clienteId));
 
-        if (clienteSelecionado && clienteSelecionado.pets.length > 0) {
+        if (clienteSelecionado && clienteSelecionado.pets && clienteSelecionado.pets.length > 0) {
             clienteSelecionado.pets.forEach(pet => {
                 selectPet.innerHTML += `<option value="${pet.id}">${pet.nome}</option>`;
             });
@@ -786,6 +819,7 @@ export function setupRelatorios() {
 
     async function gerarRelatorioHistoricoPet(petId) {
         const resultadoDiv = document.getElementById('resultado-historico-pet');
+        if (!resultadoDiv) return;
         resultadoDiv.innerHTML = '<p>Buscando histórico completo...</p>';
     
         const { data: detalhes, error } = await supabase
@@ -810,12 +844,12 @@ export function setupRelatorios() {
             return;
         }
     
-        if (detalhes.length === 0) {
+        if (!detalhes || detalhes.length === 0) {
             resultadoDiv.innerHTML = '<p>Nenhum serviço registrado para este pet.</p>';
             return;
         }
     
-        const historicoAgrupado = detalhes.reduce((acc, detalhe) => {
+        const historicoAgrupado = (detalhes || []).reduce((acc, detalhe) => {
             const ag = detalhe.agendamentos;
             if (!ag) return acc; // Pula detalhes sem agendamento associado
     
@@ -832,10 +866,10 @@ export function setupRelatorios() {
                 };
             }
     
-            if (detalhe.servicos.tipo_servico === 'principal') {
+            if (detalhe.servicos?.tipo_servico === 'principal') {
                 acc[ag.id].servicoPrincipal = detalhe.servicos.nome;
             } else {
-                acc[ag.id].servicosAdicionais.push(detalhe.servicos.nome);
+                acc[ag.id].servicosAdicionais.push(detalhe.servicos?.nome || 'Serviço Removido');
             }
     
             return acc;
@@ -926,9 +960,10 @@ export function setupRelatorios() {
         const printButton = e.target.closest('.btn-print');
         if (printButton) {
             const targetId = printButton.dataset.printTarget;
-            // Pega o título do H3 mais próximo dentro do mesmo container do relatório
-            const titulo = printButton.closest('.dashboard-section').querySelector('h2, h3')?.textContent || 'Relatório';
-            const form = printButton.closest('.dashboard-section').querySelector('.relatorio-filtros');
+            // Pega o título do H3 mais próximo dentro o mesmo container do relatório
+            const dashboardSection = printButton.closest('.dashboard-section') || printButton.closest('.relatorio-section') || document;
+            const titulo = dashboardSection.querySelector('h2, h3')?.textContent || 'Relatório';
+            const form = dashboardSection.querySelector('.relatorio-filtros');
             const periodoTexto = form ? getPeriodoDescricao(form) : '';
             imprimirConteudo(targetId, titulo, periodoTexto);
         }

@@ -1,8 +1,11 @@
+// petshop-site/js/clientes.js
+// Ajustado para nomes do banco (snake_case), tratamento de erros UNIQUE pelas constraints,
+// uso de IDs como strings e normalização de arrays/datas.
+
 import { supabase } from './supabase-config.js';
-import { mostrarSucesso, mostrarErro } from './notificacoes.js'; // <-- ADICIONE ESTA LINHA
+import { mostrarSucesso, mostrarErro } from './notificacoes.js';
 
 export function setupClientes() {
-    // --- Seletores de elementos do DOM ---
     const formCadastrarClientePet = document.getElementById('form-cadastrar-cliente-pet');
     const tabelaClientesBody = document.querySelector('#tabela-clientes tbody');
     const btnAddPet = document.getElementById('btn-add-pet');
@@ -21,7 +24,6 @@ export function setupClientes() {
     const contadorClientesPendentes = document.getElementById('contador-clientes-pendentes');
     const btnRefreshClientesPendentes = document.getElementById('btn-refresh-clientes-pendentes');
     const btnExportarClientes = document.getElementById('btn-exportar-clientes');
-
 
     let petCounter = 0;
     let listaRacas = [];
@@ -52,9 +54,7 @@ export function setupClientes() {
             }, 500);
         });
     }
-    // ================================= //
-    // ====== CARREGAMENTO DE DADOS ====== //
-    // ================================= //
+
     async function carregarBairros() {
         const selectBairro = document.getElementById('cliente-bairro');
         if (!selectBairro) return;
@@ -73,20 +73,18 @@ export function setupClientes() {
     async function carregarClientes() {
         if (!tabelaClientesBody) return;
 
-        const { data: clientes, error } = await supabase.from('clientes').select(`id, nome, telefone, endereco, pets(count)`).order('id', { ascending: true });
+        const { data: clientes, error } = await supabase.from('clientes').select('id, nome, telefone, endereco, pets(count)').order('id', { ascending: true });
 
-        if (error) { 
-            console.error('Erro ao buscar clientes:', error); 
-            return; 
+        if (error) {
+            console.error('Erro ao buscar clientes:', error);
+            return;
         }
 
         tabelaClientesBody.innerHTML = '';
 
-        // ESTA É A CORREÇÃO CRÍTICA E DEFINITIVA:
-        // Garante que o código só continue se 'clientes' for um array (mesmo que vazio).
         if (clientes && Array.isArray(clientes)) {
             clientes.forEach(cliente => {
-                const petCount = cliente.pets[0] ? cliente.pets[0].count : 0;
+                const petCount = (cliente.pets && cliente.pets[0]) ? cliente.pets[0].count : 0;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${String(cliente.id).padStart(5, '0')}</td>
@@ -106,9 +104,6 @@ export function setupClientes() {
         }
     }
 
-    // ========================================================== //
-    // ====== GERADOR DE FORMULÁRIO DE PET (CADASTRO NOVO) ====== //
-    // ========================================================== //
     const adicionarFormularioPet = () => {
         if (!petsContainer) return;
         petCounter++;
@@ -138,19 +133,14 @@ export function setupClientes() {
         petsContainer.insertAdjacentHTML('beforeend', petFormHTML);
     };
 
-
-    // ====================================================== //
-    // ====== LÓGICA PRINCIPAL DE CADASTRO (CLIENTE+PET) ====== //
-    // ====================================================== //
     if (formCadastrarClientePet) {
         formCadastrarClientePet.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // 1. Coleta os dados do formulário do cliente
             const clienteData = {
                 nome: document.getElementById('cliente-nome').value.trim(),
                 telefone: document.getElementById('cliente-telefone').value.trim(),
-                email: document.getElementById('cliente-email').value.trim() || null, // Garante que e-mail vazio seja salvo como NULL
+                email: document.getElementById('cliente-email').value.trim() || null,
                 cpf: document.getElementById('cliente-cpf').value.trim() || null,
                 endereco: document.getElementById('cliente-endereco').value.trim(),
                 bairro: document.getElementById('cliente-bairro').value
@@ -161,28 +151,21 @@ export function setupClientes() {
                 return;
             }
 
-            // 2. Tenta inserir o novo cliente. O banco de dados vai retornar um erro se o CPF, e-mail ou telefone já existir.
             const { data: novoCliente, error: clienteError } = await supabase
                 .from('clientes')
                 .insert(clienteData)
                 .select()
                 .single();
 
-            // 3. Trata o erro de duplicidade de forma amigável
             if (clienteError) {
-                if (clienteError.message.includes('clientes_cpf_key')) {
-                    mostrarErro('Erro: O CPF informado já está cadastrado.'); // <-- ALTERADO
-                } else if (clienteError.message.includes('clientes_email_key')) {
-                    mostrarErro('Erro: O e-mail informado já está cadastrado.'); // <-- ALTERADO
-                } else if (clienteError.message.includes('clientes_telefone_key')) {
-                    mostrarErro('Erro: O telefone informado já está cadastrado.'); // <-- ALTERADO
-                } else {
-                    mostrarErro('Erro ao cadastrar cliente: ' + clienteError.message); // <-- ALTERADO
-                }
-                return; // Interrompe a execução se houver erro
+                const msg = clienteError.message || '';
+                if (msg.includes('clientes_cpf_key')) mostrarErro('Erro: O CPF informado já está cadastrado.');
+                else if (msg.includes('clientes_email_key')) mostrarErro('Erro: O e-mail informado já está cadastrado.');
+                else if (msg.includes('clientes_telefone_key')) mostrarErro('Erro: O telefone informado já está cadastrado.');
+                else mostrarErro('Erro ao cadastrar cliente: ' + clienteError.message);
+                return;
             }
 
-            // 4. Se o cliente foi criado com sucesso, continua para cadastrar os pets
             const petForms = petsContainer.querySelectorAll('.pet-form-template');
             for (const form of petForms) {
                 const fotoFile = form.querySelector('.pet-foto').files[0];
@@ -191,11 +174,11 @@ export function setupClientes() {
                 if (fotoFile) {
                     const filePath = `pets_fotos/${novoCliente.id}-${Date.now()}-${fotoFile.name}`;
                     const { error: uploadError } = await supabase.storage.from('petshop-assets').upload(filePath, fotoFile);
-                    if (uploadError) {
-                        console.error('Erro no upload da foto:', uploadError);
-                    } else {
+                    if (!uploadError) {
                         const { data } = supabase.storage.from('petshop-assets').getPublicUrl(filePath);
                         fotoUrl = data.publicUrl;
+                    } else {
+                        console.error('Erro no upload da foto:', uploadError.message);
                     }
                 }
 
@@ -220,9 +203,6 @@ export function setupClientes() {
         });
     }
 
-    // ====================================================== //
-    // ====== AÇÕES NA LISTA DE CLIENTES (VER, EDITAR, EXCLUIR) ====== //
-    // ====================================================== //
     if (tabelaClientesBody) {
         tabelaClientesBody.addEventListener('click', async (e) => {
             const viewBtn = e.target.closest('.btn-view-pets');
@@ -233,7 +213,7 @@ export function setupClientes() {
             if (viewBtn) {
                 const clienteId = viewBtn.dataset.id;
                 const { data: pets, error } = await supabase.from('pets').select('*').eq('cliente_id', clienteId);
-                if (error) { mostrarErro("Erro ao buscar pets."); return; }
+                if (error) { mostrarErro('Erro ao buscar pets.'); return; }
 
                 petsModalOwnerName.textContent = viewBtn.dataset.name;
                 petsModalBody.innerHTML = pets.length === 0 ? '<p>Este cliente não possui pets cadastrados.</p>' : '';
@@ -253,7 +233,7 @@ export function setupClientes() {
                 });
                 viewPetsModal.style.display = 'block';
             }
-            
+
             if (editBtn) {
                 const clienteId = editBtn.dataset.id;
                 const { data: cliente } = await supabase.from('clientes').select('*').eq('id', clienteId).single();
@@ -265,23 +245,20 @@ export function setupClientes() {
                     document.getElementById('edit-cliente-cpf').value = cliente.cpf;
                     document.getElementById('edit-cliente-endereco').value = cliente.endereco;
                 }
-                
+
                 editPetsContainer.innerHTML = 'Carregando pets...';
                 const { data: pets } = await supabase.from('pets').select('*').eq('cliente_id', clienteId);
-                editPetsContainer.innerHTML = ''; 
-                if (pets) {
-                    pets.forEach(pet => gerarFormularioPetEdicao(pet));
-                }
-                
+                editPetsContainer.innerHTML = '';
+                if (pets) pets.forEach(pet => gerarFormularioPetEdicao(pet));
                 editModal.style.display = 'block';
             }
 
             if (deleteBtn) {
                 const clienteId = deleteBtn.dataset.id;
-                if (confirm("Tem certeza? Excluir um cliente também removerá todos os seus pets e fotos permanentemente.")) {
+                if (confirm('Tem certeza? Excluir um cliente também removerá todos os seus pets e fotos permanentemente.')) {
                     const { error } = await supabase.from('clientes').delete().eq('id', clienteId);
-                    if (error) { mostrarErro("Erro ao excluir: " + error.message); } // <-- ALTERADO
-                    else { mostrarSucesso("Cliente excluído!"); await carregarClientes(); } // <-- ALTERADO
+                    if (error) mostrarErro('Erro ao excluir: ' + error.message);
+                    else { mostrarSucesso('Cliente excluído!'); await carregarClientes(); }
                 }
             }
 
@@ -292,14 +269,10 @@ export function setupClientes() {
             }
         });
     }
-    
-    // ================================================================= //
-    // ====== GERADOR DE FORMULÁRIO DE EDIÇÃO DE PET (NOVO) ====== //
-    // ================================================================= //
+
     const gerarFormularioPetEdicao = (pet = {}) => {
         const petId = pet.id || `new-${Date.now()}`;
         const racasOptions = listaRacas.map(r => `<option value="${r.nome}" ${pet.raca === r.nome ? 'selected' : ''}>${r.nome}</option>`).join('');
-        
         const formHTML = `
             <form class="dashboard-form edit-pet-form" data-pet-id="${petId}">
                 <input type="hidden" class="pet-id-input" value="${pet.id || ''}">
@@ -334,14 +307,9 @@ export function setupClientes() {
         `;
         editPetsContainer.insertAdjacentHTML('beforeend', formHTML);
     };
-    
-    if(btnAddPetNoModal) {
-        btnAddPetNoModal.addEventListener('click', () => gerarFormularioPetEdicao());
-    }
 
-    // ================================================================= //
-    // ====== LÓGICA DE SALVAR/DELETAR PETS DENTRO DO MODAL (NOVO) ====== //
-    // ================================================================= //
+    if (btnAddPetNoModal) btnAddPetNoModal.addEventListener('click', () => gerarFormularioPetEdicao());
+
     if (editPetsContainer) {
         editPetsContainer.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -350,7 +318,7 @@ export function setupClientes() {
             const form = e.target;
             const petId = form.querySelector('.pet-id-input').value;
             const clienteId = document.getElementById('edit-cliente-id').value;
-            
+
             let petData = {
                 nome: form.querySelector('.edit-pet-nome').value,
                 raca: form.querySelector('.edit-pet-raca').value,
@@ -366,23 +334,21 @@ export function setupClientes() {
             if (fotoFile) {
                 const filePath = `pets_fotos/${clienteId}-${petId || Date.now()}-${fotoFile.name}`;
                 const { error: uploadError } = await supabase.storage.from('petshop-assets').upload(filePath, fotoFile, { upsert: true });
-                
                 if (uploadError) { alert('Erro no upload da foto: ' + uploadError.message); return; }
-                
                 const { data } = supabase.storage.from('petshop-assets').getPublicUrl(filePath);
                 petData.foto_url = data.publicUrl;
             }
 
-            if (petId) { 
+            if (petId) {
                 const { error } = await supabase.from('pets').update(petData).eq('id', petId);
-                if (error) { mostrarErro('Erro ao atualizar pet: ' + error.message); } // <-- ALTERADO
-                else { mostrarSucesso('Pet atualizado com sucesso!'); } // <-- ALTERADO
-            } else { 
+                if (error) mostrarErro('Erro ao atualizar pet: ' + error.message);
+                else mostrarSucesso('Pet atualizado com sucesso!');
+            } else {
                 const { data: newPet, error } = await supabase.from('pets').insert(petData).select().single();
-                if (error) { mostrarErro('Erro ao salvar novo pet: ' + error.message); } // <-- ALTERADO
+                if (error) mostrarErro('Erro ao salvar novo pet: ' + error.message);
                 else {
-                    mostrarSucesso('Novo pet salvo com sucesso!'); // <-- ALTERADO
-                    form.querySelector('.pet-id-input').value = newPet.id; 
+                    mostrarSucesso('Novo pet salvo com sucesso!');
+                    form.querySelector('.pet-id-input').value = newPet.id;
                 }
             }
         });
@@ -390,25 +356,18 @@ export function setupClientes() {
         editPetsContainer.addEventListener('click', async (e) => {
             if (e.target.classList.contains('btn-delete-pet')) {
                 if (!confirm('Tem certeza que deseja excluir este pet?')) return;
-                
                 const form = e.target.closest('.edit-pet-form');
                 const petId = form.querySelector('.pet-id-input').value;
-                
                 if (petId) {
                     const { error } = await supabase.from('pets').delete().eq('id', petId);
-                    if (error) { mostrarErro('Erro ao excluir pet: ' + error.message); } // <-- ALTERADO
-                    else {
-                        mostrarSucesso('Pet excluído com sucesso!'); // <-- ALTERADO
-                        form.remove();
-                    }
-                } else {
-                    form.remove(); 
-                }
+                    if (error) mostrarErro('Erro ao excluir pet: ' + error.message);
+                    else { mostrarSucesso('Pet excluído com sucesso!'); form.remove(); }
+                } else form.remove();
             }
         });
     }
 
-    if(formEditarCliente){
+    if (formEditarCliente) {
         formEditarCliente.addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('edit-cliente-id').value;
@@ -420,29 +379,23 @@ export function setupClientes() {
                 endereco: document.getElementById('edit-cliente-endereco').value,
             }).eq('id', id);
 
-            if(error) { mostrarErro("Erro ao salvar cliente: " + error.message); } // <-- ALTERADO
+            if (error) mostrarErro('Erro ao salvar cliente: ' + error.message);
             else {
-                mostrarSucesso("Dados do cliente atualizados!"); // <-- ALTERADO
+                mostrarSucesso('Dados do cliente atualizados!');
                 editModal.style.display = 'none';
                 await carregarClientes();
             }
         });
     }
-    
-    document.addEventListener('click', e => {
-        if (e.target.classList.contains('btn-remove-pet')) {
-            e.target.closest('.pet-form-template, .edit-pet-form').remove();
-        }
-    });
-    
-    if (btnAddPet) {
-        btnAddPet.addEventListener('click', adicionarFormularioPet);
-    }
 
-        // --- NOVA FUNÇÃO: Carregar e exibir o histórico do cliente ---
+    document.addEventListener('click', e => {
+        if (e.target.classList.contains('btn-remove-pet')) e.target.closest('.pet-form-template, .edit-pet-form').remove();
+    });
+
+    if (btnAddPet) btnAddPet.addEventListener('click', adicionarFormularioPet);
+
     async function carregarHistoricoCliente(clienteId, clienteNome) {
         if (!modalHistorico || !historicoContainer || !historicoNomeCliente) return;
-
         historicoNomeCliente.textContent = clienteNome;
         historicoContainer.innerHTML = '<p>Carregando histórico...</p>';
         modalHistorico.style.display = 'block';
@@ -468,24 +421,20 @@ export function setupClientes() {
             return;
         }
 
-        if (agendamentos.length === 0) {
+        if (!agendamentos || agendamentos.length === 0) {
             historicoContainer.innerHTML = '<p>Nenhum serviço registrado para este cliente.</p>';
             return;
         }
 
-        historicoContainer.innerHTML = ''; // Limpa o container
+        historicoContainer.innerHTML = '';
         agendamentos.forEach(ag => {
             const dataAgendamento = new Date(ag.data_hora_inicio);
             const petsServicos = {};
-
-            ag.agendamento_detalhes.forEach(detalhe => {
+            (ag.agendamento_detalhes || []).forEach(detalhe => {
                 const petNome = detalhe.pets?.nome || 'Pet Removido';
-                if (!petsServicos[petNome]) {
-                    petsServicos[petNome] = [];
-                }
+                if (!petsServicos[petNome]) petsServicos[petNome] = [];
                 petsServicos[petNome].push(detalhe.servicos?.nome || 'Serviço Removido');
             });
-
             const timelineItem = `
                 <div class="timeline-item">
                     <div class="timeline-icon"><i class="fas fa-cut"></i></div>
@@ -525,17 +474,14 @@ export function setupClientes() {
             return;
         }
 
-        // Atualiza o contador no menu
         if (contadorClientesPendentes) {
-            if (clientes.length > 0) {
+            if ((clientes || []).length > 0) {
                 contadorClientesPendentes.textContent = clientes.length;
                 contadorClientesPendentes.style.display = 'flex';
-            } else {
-                contadorClientesPendentes.style.display = 'none';
-            }
+            } else contadorClientesPendentes.style.display = 'none';
         }
 
-        if (clientes.length === 0) {
+        if (!clientes || clientes.length === 0) {
             tabelaClientesPendentesBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">Nenhum cliente pendente no momento.</td></tr>`;
             return;
         }
@@ -565,36 +511,19 @@ export function setupClientes() {
             if (approveBtn) {
                 const clienteId = approveBtn.dataset.id;
                 if (confirm('Deseja aprovar o cadastro deste cliente?')) {
-                    const { error } = await supabase
-                        .from('clientes')
-                        .update({ status: 'ativo' })
-                        .eq('id', clienteId);
-
-                    if (error) {
-                        alert('Erro ao aprovar cliente: ' + error.message);
-                    } else {
-                        alert('Cliente aprovado com sucesso!');
-                        await carregarClientesPendentes(); // Recarrega a lista de pendentes
-                        await carregarClientes(); // Recarrega a lista de clientes gerais
-                    }
+                    const { error } = await supabase.from('clientes').update({ status: 'ativo' }).eq('id', clienteId);
+                    if (error) alert('Erro ao aprovar cliente: ' + error.message);
+                    else { alert('Cliente aprovado com sucesso!'); await carregarClientesPendentes(); await carregarClientes(); }
                 }
             }
 
             if (rejectBtn) {
                 const clienteId = rejectBtn.dataset.id;
                 if (confirm('ATENÇÃO: Rejeitar este cadastro irá excluir o cliente, seus pets e os agendamentos pendentes associados. Deseja continuar?')) {
-                    // Por segurança, primeiro cancelamos os agendamentos pendentes associados
                     await supabase.from('agendamentos').update({ status: 'cancelado' }).eq('cliente_id', clienteId).eq('status', 'pendente');
-
-                    // Depois, excluímos o cliente (o que deve excluir os pets em cascata, se configurado)
                     const { error } = await supabase.from('clientes').delete().eq('id', clienteId);
-
-                    if (error) {
-                        alert('Erro ao rejeitar cadastro: ' + error.message);
-                    } else {
-                        alert('Cadastro rejeitado e excluído com sucesso.');
-                        await carregarClientesPendentes();
-                    }
+                    if (error) alert('Erro ao rejeitar cadastro: ' + error.message);
+                    else { alert('Cadastro rejeitado e excluído com sucesso.'); await carregarClientesPendentes(); }
                 }
             }
         });
@@ -607,26 +536,25 @@ export function setupClientes() {
         `).order('nome');
 
         if (error) {
-            console.error("Erro ao exportar clientes:", error);
-            alert("Não foi possível exportar a lista de clientes.");
+            console.error('Erro ao exportar clientes:', error);
+            alert('Não foi possível exportar a lista de clientes.');
             return;
         }
 
-        if (clientes.length === 0) {
-            alert("Nenhum cliente para exportar.");
+        if (!clientes || clientes.length === 0) {
+            alert('Nenhum cliente para exportar.');
             return;
         }
 
-        // --- Converte dados para CSV ---
         const csvRows = [];
         const headers = ['ID', 'Nome', 'Telefone', 'E-mail', 'CPF', 'Endereço', 'Bairro', 'Pets (Nome - Raça)'];
         csvRows.push(headers.join(';'));
 
         for (const cliente of clientes) {
-            const petsInfo = cliente.pets.map(p => `${p.nome} - ${p.raca}`).join(', ');
+            const petsInfo = (cliente.pets || []).map(p => `${p.nome} - ${p.raca}`).join(', ');
             const row = [
                 cliente.id,
-                `"${cliente.nome}"`, // Aspas para garantir que nomes com vírgula não quebrem o CSV
+                `"${cliente.nome}"`,
                 cliente.telefone || '',
                 cliente.email || '',
                 cliente.cpf || '',
@@ -637,7 +565,6 @@ export function setupClientes() {
             csvRows.push(row.join(';'));
         }
 
-        // --- Cria e baixa o arquivo ---
         const csvString = csvRows.join('\n');
         const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -647,17 +574,14 @@ export function setupClientes() {
         link.click();
         document.body.removeChild(link);
     }
-    
-    // Adiciona o event listener para o novo botão de exportar
-    if (btnExportarClientes) {
-        btnExportarClientes.addEventListener('click', exportarClientesParaCSV);
-    }
+
+    if (btnExportarClientes) btnExportarClientes.addEventListener('click', exportarClientesParaCSV);
 
     async function init() {
         await carregarRacas();
         await carregarBairros();
         await carregarClientes();
-        await carregarClientesPendentes(); 
+        await carregarClientesPendentes();
         adicionarFormularioPet();
     }
     init();

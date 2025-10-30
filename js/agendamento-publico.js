@@ -1,3 +1,6 @@
+// Ajustes para usar nomes do esquema (cliente_id, agendamentos, agendamento_detalhes, valor_tele_busca)
+// e tratar ids como strings; normalização de arrays e datas em ISO.
+
 import { supabase } from './supabase-config.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,16 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectTeleBusca = document.getElementById('tele-busca');
     const avisoTeleBusca = document.getElementById('aviso-tele-busca');
     
-    // Cache para evitar buscas repetidas no banco de dados
     let listaServicosCache = [];
     let listaRacasCache = [];
 
-    // --- FUNÇÕES DE LÓGICA DO FORMULÁRIO ---
-
-    // Carrega a lista de raças e preenche um select específico
     async function carregarRacasParaPet(selectElement) {
         if (!selectElement) return;
-        if (listaRacasCache.length === 0) { // Busca no banco só na primeira vez
+        if (listaRacasCache.length === 0) {
             const { data } = await supabase.from('racas').select('nome').order('nome');
             listaRacasCache = data || [];
         }
@@ -32,25 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
         selectElement.innerHTML += `<option value="SRD">Sem Raça Definida (SRD)</option><option value="Outra">Outra</option>`;
     }
 
-    // Carrega a lista de serviços PRINCIPAIS em um <select>
     async function carregarServicosPrincipaisParaPet(selectElement) {
         if (!selectElement) return;
-        // Busca no banco só na primeira vez
         if (listaServicosCache.length === 0) {
             const { data } = await supabase.from('servicos').select('id, nome, tipo_servico, valor').eq('mostrar_site', true).order('nome');
             listaServicosCache = data || [];
         }
-
         selectElement.innerHTML = '<option value="">Selecione um serviço</option>';
         listaServicosCache
             .filter(s => s.tipo_servico === 'principal')
             .forEach(s => selectElement.innerHTML += `<option value="${s.id}" data-nome="${s.nome}">${s.nome}</option>`);
     }
 
-    // Carrega a lista de serviços ADICIONAIS como checkboxes
     async function carregarServicosAdicionaisParaPet(containerElement, petId) {
         if (!containerElement) return;
-        // O cache já deve ter sido preenchido pela função anterior
         if (listaServicosCache.length === 0) {
             const { data } = await supabase.from('servicos').select('id, nome, tipo_servico, valor').eq('mostrar_site', true).order('nome');
             listaServicosCache = data || [];
@@ -72,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Função que cria e adiciona um novo formulário de pet na tela
     function adicionarFormularioPet() {
         if (!petsContainer) return;
         const petId = `pet_${Date.now()}`;
@@ -100,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         carregarServicosAdicionaisParaPet(novoPetForm.querySelector('.adicionais-container'), petId);
     }
 
-    // Função principal que carrega todos os dados iniciais da página
     async function carregarDadosIniciais() {
         if (selectBairroCliente) {
             const { data: bairros } = await supabase.from('bairros').select('nome').order('nome');
@@ -112,23 +104,24 @@ document.addEventListener('DOMContentLoaded', () => {
         adicionarFormularioPet();
     }
 
-    // --- LÓGICA DE HORÁRIOS DISPONÍVEIS ---
     async function atualizarHorariosDisponiveis() {
         const dataSelecionada = inputData.value;
         if (!dataSelecionada) return;
         horariosContainer.innerHTML = '<p>Verificando horários...</p>';
         const dataObj = new Date(dataSelecionada + 'T12:00:00');
         const diaDaSemana = dataObj.getDay();
+
         const { data: horariosPadrao } = await supabase.from('horarios_padrao').select('horarios').eq('dia_semana', diaDaSemana).eq('ativo', true).single();
         if (!horariosPadrao || !horariosPadrao.horarios || horariosPadrao.horarios.length === 0) {
             horariosContainer.innerHTML = '<p class="horario-indisponivel">Desculpe, não há atendimento neste dia.</p>';
             return;
         }
         const todosOsSlots = horariosPadrao.horarios;
-        const inicioDoDia = new Date(dataObj); inicioDoDia.setUTCHours(0, 0, 0, 0);
-        const fimDoDia = new Date(dataObj); fimDoDia.setUTCHours(23, 59, 59, 999);
+        const inicioDoDia = new Date(dataObj); inicioDoDia.setHours(0, 0, 0, 0);
+        const fimDoDia = new Date(dataObj); fimDoDia.setHours(23, 59, 59, 999);
+
         const { data: agendamentos } = await supabase.from('agendamentos').select('data_hora_inicio').gte('data_hora_inicio', inicioDoDia.toISOString()).lte('data_hora_inicio', fimDoDia.toISOString()).in('status', ['confirmado', 'pendente', 'Agendado', 'Realizado']);
-        const horariosOcupados = agendamentos.map(ag => new Date(ag.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }));
+        const horariosOcupados = (agendamentos || []).map(ag => new Date(ag.data_hora_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }));
         const horariosLivres = todosOsSlots.filter(horario => !horariosOcupados.includes(horario));
         if (horariosLivres.length === 0) {
             horariosContainer.innerHTML = '<p class="horario-indisponivel">Todos os horários para este dia foram preenchidos.</p>';
@@ -137,8 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
         horariosContainer.innerHTML = '';
         horariosLivres.forEach(horario => horariosContainer.innerHTML += `<button type="button" class="horario-btn">${horario}</button>`);
     }
-
-    // --- EVENT LISTENERS (OUVINTES DE EVENTOS) ---
 
     if (selectTeleBusca && avisoTeleBusca) {
         selectTeleBusca.addEventListener('change', () => {
@@ -172,12 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const numPets = document.querySelectorAll('.pet-form-template').length;
                 const horariosSelecionados = document.querySelectorAll('.horario-btn.selected').length;
                 
-                // Impede a seleção se o número de horários já for igual ao número de pets
                 if (e.target.classList.contains('selected')) {
-                    // Se o usuário clicar em um horário já selecionado, ele pode desmarcar
                     e.target.classList.remove('selected');
                 } else if (horariosSelecionados < numPets) {
-                    // Se o número de horários selecionados for menor que o de pets, pode selecionar
                     e.target.classList.add('selected');
                 } else {
                     alert('Você deve selecionar um horário para cada pet. Remova um pet ou desmarque um horário para selecionar outro.');
@@ -211,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     email: document.getElementById('cliente-email').value || null,
                     cpf: document.getElementById('cliente-cpf').value || null,
                     endereco: document.getElementById('cliente-endereco').value,
-                    bairro: document.getElementById('cliente-bairro').value,
+                    bairro: document.getElementById('cliente-bairro').value
                 };
                 
                 let clienteId;
@@ -223,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .single();
 
                 if (clienteExistente) {
-                    clienteId = clienteExistente.id;
+                    clienteId = clienteExistente.id; // mantemos como string
                 } else {
                     const { data: novoCliente, error: createClientError } = await supabase
                         .from('clientes')
@@ -266,11 +254,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     .from('servicos')
                     .select('id, valor')
                     .in('id', servicosSelecionadosIds);
-                const valoresServicos = new Map(servicosComValor.map(s => [s.id, s.valor]));
+                const valoresServicos = new Map((servicosComValor || []).map(s => [String(s.id), s.valor]));
 
                 let valorTotal = 0;
                 servicosSelecionadosIds.forEach(id => {
-                    valorTotal += valoresServicos.get(parseInt(id, 10)) || 0;
+                    valorTotal += Number(valoresServicos.get(String(id)) || 0);
                 });
                 
                 if (selectTeleBusca.value === 'sim') {
@@ -286,13 +274,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // --- 4. Cria o ÚNICO agendamento ---
                 const horarioPrincipal = horariosSelecionados[0].textContent; // Pega o primeiro horário selecionado
+                // Monta ISO com timezone - assumimos local -03:00 (Brasil) — já fazia antes, mantemos
                 const dataHoraCompleta = `${inputData.value}T${horarioPrincipal}:00-03:00`;
                 const agendamentoData = {
                     cliente_id: clienteId,
                     data_hora_inicio: dataHoraCompleta,
                     status: 'pendente',
                     valor_cobrado: valorTotal,
-                    tipo_entrega: document.getElementById('tele-busca').value === 'sim' ? 'Busca-e-Entrega' : 'Cliente Traz',
+                    tipo_entrega: selectTeleBusca.value === 'sim' ? 'Busca-e-Entrega' : 'Cliente Traz',
                     observacoes: 'Solicitação de agendamento via site.'
                 };
 
@@ -303,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     .single();
                 if (createAgendamentoError) throw new Error('Erro ao criar o agendamento: ' + createAgendamentoError.message);
 
-                // --- 5. Cria todos os pets e seus detalhes em uma única Ordem de Serviço ---
+                // --- 5. Cria todos os pets e seus detalhes ---
                 const detalhesParaInserir = [];
                 for (const pet of petsParaSalvar) {
                     const dadosPet = {
@@ -323,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (createPetError) throw new Error(`Erro ao cadastrar o pet ${pet.nome}: ` + createPetError.message);
 
                     pet.servicos_ids.forEach(servicoId => {
-                         detalhesParaInserir.push({ agendamento_id: novoAgendamento.id, pet_id: novoPet.id, servico_id: parseInt(servicoId, 10) });
+                         detalhesParaInserir.push({ agendamento_id: novoAgendamento.id, pet_id: novoPet.id, servico_id: servicoId });
                     });
                 }
                 
@@ -337,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 atualizarHorariosDisponiveis();
 
             } catch (error) {
-                alert('Falha na solicitação: ' + error.message);
+                alert('Falha na solicitação: ' + (error.message || error));
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Enviar Solicitação de Agendamento';

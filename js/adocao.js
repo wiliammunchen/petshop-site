@@ -1,15 +1,43 @@
-// petshop-site/js/adocao.js (VERSÃO COM MOVIMENTAÇÃO DO MODAL PARA <body> E MELHORIAS DE VISIBILIDADE)
+// petshop-site/js/adocao.js — ajustado para nomes do esquema e normalização de campos
 
 import { supabase } from './supabase-config.js';
 
 const mostrarErro = (mensagem) => alert(mensagem);
 const mostrarSucesso = (mensagem) => alert(mensagem);
 
+// Helper para normalizar campos vindos de pets_adocao com nomes inconsistentes
+function normalizeAdocaoRecord(r) {
+    if (!r) return r;
+    // Possíveis variações: nome_pet / nomePet, tutorTelefone / tutorTelefone, imagens_url / imagensURL / imagens_url_arr ...
+    const nome_pet = r.nome_pet || r.nomePet || r.nome || r.nomePet;
+    const idadePet = r.idadePet || r.idade || r.idade_pet;
+    const tutorNome = r.tutorNome || r.tutor_nome || r.tutor || r.tutorName;
+    const tutorTelefone = r.tutorTelefone || r.tutor_telefone || r.tutorTelefone;
+    const tutorEmail = r.tutorEmail || r.tutor_email || r.tutorEmail;
+    const cidade = r.cidade || r.city;
+    const adotado = typeof r.adotado === 'boolean' ? r.adotado : (r.adotado === 't' || r.adotado === 'true' ? true : false);
+    // imagens: prioriza imagens_url, imagens_url_arr, imagensURL_arr, imagensURL
+    const imagens = r.imagens_url || r.imagens_url_arr || r.imagensURL_arr || r.imagensURL || r.imagens || [];
+    // garante array
+    const imagens_arr = Array.isArray(imagens) ? imagens : (imagens ? String(imagens).replace(/^{|}$/g, '').split(',').map(s => s.trim()) : []);
+    return {
+        ...r,
+        nome_pet,
+        idadePet,
+        tutorNome,
+        tutorTelefone,
+        tutorEmail,
+        cidade,
+        adotado,
+        imagens: imagens_arr
+    };
+}
+
 async function carregarAnuncios() {
     const adocaoGrid = document.getElementById('adocao-grid');
     if (!adocaoGrid) return;
 
-    const { data: anuncios, error } = await supabase
+    const { data: anunciosRaw, error } = await supabase
         .from('pets_adocao')
         .select('*')
         .order('created_at', { ascending: false });
@@ -20,6 +48,8 @@ async function carregarAnuncios() {
         return;
     }
 
+    const anuncios = (anunciosRaw || []).map(normalizeAdocaoRecord);
+
     if (!anuncios || anuncios.length === 0) {
         adocaoGrid.innerHTML = '<p>Nenhum pet para adoção no momento. Seja o primeiro a anunciar!</p>';
         return;
@@ -27,19 +57,19 @@ async function carregarAnuncios() {
 
     adocaoGrid.innerHTML = '';
     anuncios.forEach(anuncio => {
-        const fotos = anuncio.imagensURL || []; 
+        const fotos = anuncio.imagens || [];
         const anuncioCard = document.createElement('div');
         anuncioCard.classList.add('adocao-card');
 
         const numeroLimpo = anuncio.tutorTelefone ? anuncio.tutorTelefone.replace(/\D/g, '') : '';
-        const textoMensagem = encodeURIComponent(`Olá! Vi o anúncio de ${anuncio.nomePet} para adoção no site Espaço Pet e gostaria de mais informações.`);
+        const textoMensagem = encodeURIComponent(`Olá! Vi o anúncio de ${anuncio.nome_pet} para adoção no site Espaço Pet e gostaria de mais informações.`);
         const linkWhatsApp = numeroLimpo ? `https://api.whatsapp.com/send?phone=55${numeroLimpo}&text=${textoMensagem}` : '#';
 
         anuncioCard.innerHTML = `
             <div class="card-imagem-container">
                 ${anuncio.adotado ? '<div class="adotado-banner">ADOTADO</div>' : ''}
                 ${(fotos.length > 0) ?
-                    fotos.map((foto, index) => `<img src="${foto}" alt="Foto de ${anuncio.nomePet}" class="adocao-imagem ${index === 0 ? 'active' : ''}" data-index="${index}">`).join('') :
+                    fotos.map((foto, index) => `<img src="${foto}" alt="Foto de ${anuncio.nome_pet}" class="adocao-imagem ${index === 0 ? 'active' : ''}" data-index="${index}">`).join('') :
                     '<img src="images/default-pet-avatar.png" alt="Foto padrão de pet" class="adocao-imagem active">'
                 }
                 ${(fotos.length > 1) ?
@@ -48,13 +78,13 @@ async function carregarAnuncios() {
                 }
             </div>
             <div class="adocao-card-info">
-                <h3>${anuncio.nomePet}</h3>
-                <p><i class="fas fa-paw"></i> <strong>Idade:</strong> ${anuncio.idadePet}</p>
-                <p><i class="fas fa-map-marker-alt"></i> <strong>Cidade:</strong> ${anuncio.cidade}</p>
+                <h3>${anuncio.nome_pet}</h3>
+                <p><i class="fas fa-paw"></i> <strong>Idade:</strong> ${anuncio.idadePet || 'N/I'}</p>
+                <p><i class="fas fa-map-marker-alt"></i> <strong>Cidade:</strong> ${anuncio.cidade || 'N/I'}</p>
                 <p><i class="fas fa-info-circle"></i> <strong>Obs:</strong> ${anuncio.observacoes || 'Nenhuma'}</p>
-                <p><i class="fas fa-envelope"></i> <strong>Email:</strong> ${anuncio.tutorEmail}</p>
+                <p><i class="fas fa-envelope"></i> <strong>Email:</strong> ${anuncio.tutorEmail || '-'}</p>
                 <hr class="card-divider">
-                <p><strong>Contato:</strong> ${anuncio.tutorNome}</p>
+                <p><strong>Contato:</strong> ${anuncio.tutorNome || '-'}</p>
                 <a href="${linkWhatsApp}" 
                    target="_blank" 
                    class="btn-principal" 
@@ -71,7 +101,7 @@ async function carregarAnunciosDashboard() {
     const tabelaBody = document.querySelector('#tabela-adocao tbody');
     if (!tabelaBody) return;
 
-    const { data: anuncios, error } = await supabase
+    const { data: anunciosRaw, error } = await supabase
         .from('pets_adocao')
         .select('*')
         .order('created_at', { ascending: false });
@@ -81,8 +111,10 @@ async function carregarAnunciosDashboard() {
         return;
     }
 
+    const anuncios = (anunciosRaw || []).map(normalizeAdocaoRecord);
+
     tabelaBody.innerHTML = '';
-    for (const anuncio of anuncios || []) {
+    for (const anuncio of anuncios) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
@@ -90,10 +122,10 @@ async function carregarAnunciosDashboard() {
                     ${anuncio.adotado ? 'Adotado' : 'Disponível'}
                 </span>
             </td>
-            <td>${anuncio.nomePet}</td>
-            <td>${anuncio.tutorNome}</td>
-            <td>${anuncio.tutorTelefone}</td>
-            <td>${anuncio.cidade}</td>
+            <td>${anuncio.nome_pet}</td>
+            <td>${anuncio.tutorNome || '-'}</td>
+            <td>${anuncio.tutorTelefone || '-'}</td>
+            <td>${anuncio.cidade || '-'}</td>
             <td class="actions-cell">
                 <button type="button" class="btn-edit-adocao btn-edit" data-id="${anuncio.id}" title="Editar Anúncio">
                     <i class="fas fa-edit"></i>
@@ -113,26 +145,21 @@ async function carregarAnunciosDashboard() {
 function attachModalCloseHandlers(modal) {
     if (!modal) return;
     if (modal.dataset.listenersAttached === 'true') return;
-    // close by clicking background
     modal.addEventListener('click', (ev) => {
         if (ev.target === modal) {
             modal.style.display = 'none';
         }
     });
-    // close buttons inside modal (any element with class close-modal-admin)
     modal.querySelectorAll('.close-modal-admin').forEach(btn => {
         btn.addEventListener('click', () => modal.style.display = 'none');
     });
-    // close on ESC
     const escHandler = (ev) => {
         if (ev.key === 'Escape' && modal.style.display === 'block') {
             modal.style.display = 'none';
         }
     };
     document.addEventListener('keydown', escHandler);
-    // mark attached
     modal.dataset.listenersAttached = 'true';
-    console.log('Handlers de fechamento do modal anexados.');
 }
 
 export function setupAdocao() {
@@ -187,14 +214,15 @@ export function setupAdocao() {
             }
 
             const anuncioData = {
+                nome_pet: document.getElementById('nome_pet').value,
+                idadePet: document.getElementById('idade_pet').value,
+                cidade: document.getElementById('cidade').value,
                 tutorNome: document.getElementById('nome').value,
                 tutorTelefone: document.getElementById('telefone').value,
                 tutorEmail: document.getElementById('email').value,
-                cidade: document.getElementById('cidade').value,
-                nomePet: document.getElementById('nome_pet').value,
-                idadePet: document.getElementById('idade_pet').value,
                 observacoes: document.getElementById('observacoes').value,
-                imagensURL: fotosUrls,
+                imagens_url: fotosUrls,
+                adotado: false
             };
 
             const { error: insertError } = await supabase.from('pets_adocao').insert(anuncioData);
@@ -225,41 +253,31 @@ export function setupAdocao() {
                 const refreshButton = e.target.closest('#btn-refresh-adocao');
 
                 if (editButton) {
-                    console.log('Botão editar clique detectado, id=', editButton.dataset.id);
                     const modalEditar = document.getElementById('modal-editar-adocao');
-                    console.log('modalEditar elemento (getElementById):', modalEditar);
-
                     if (!modalEditar) {
-                        const maybe = document.querySelectorAll('[id*="adocao"]');
-                        console.warn('modal-editar-adocao não encontrado. Elementos com "adocao" no id:', maybe);
-                        alert('Erro: modal de edição não encontrado no DOM. Veja o console para detalhes.');
+                        alert('Erro: modal de edição não encontrado no DOM.');
                         return;
                     }
-
-                    // Move o modal para body para evitar problemas com ancestors com overflow/z-index
                     if (modalEditar.parentElement !== document.body) {
                         document.body.appendChild(modalEditar);
-                        console.log('Modal movido para document.body para garantir visibilidade.');
                     }
-
-                    // garante posição fixa e z-index alto (fallback)
                     modalEditar.style.position = 'fixed';
                     modalEditar.style.zIndex = '10000';
-
-                    // anexa handlers de fechamento apenas uma vez
                     attachModalCloseHandlers(modalEditar);
 
                     const anuncioId = editButton.dataset.id;
-                    const { data: anuncio, error } = await supabase.from('pets_adocao').select('*').eq('id', anuncioId).single();
+                    const { data: anuncioRaw, error } = await supabase.from('pets_adocao').select('*').eq('id', anuncioId).single();
 
-                    if (error || !anuncio) {
+                    if (error || !anuncioRaw) {
                         console.error('Erro ao carregar os dados do anúncio para edição:', error);
                         return alert('Erro ao carregar os dados do anúncio para edição.');
                     }
 
+                    const anuncio = normalizeAdocaoRecord(anuncioRaw);
+
                     const fieldMap = [
                         ['edit-adocao-id', anuncio.id],
-                        ['edit-adocao-nome-pet', anuncio.nomePet || ''],
+                        ['edit-adocao-nome-pet', anuncio.nome_pet || ''],
                         ['edit-adocao-idade-pet', anuncio.idadePet || ''],
                         ['edit-adocao-observacoes', anuncio.observacoes || ''],
                         ['edit-adocao-tutor-nome', anuncio.tutorNome || ''],
@@ -270,16 +288,11 @@ export function setupAdocao() {
                     fieldMap.forEach(([id, val]) => {
                         const el = document.getElementById(id);
                         if (el) el.value = val;
-                        else console.warn(`Campo esperado não encontrado no DOM: ${id}`);
                     });
 
-                    // Exibe o modal e foca o primeiro campo
                     modalEditar.style.display = 'block';
                     const firstInput = modalEditar.querySelector('input, textarea, select');
-                    if (firstInput) {
-                        try { firstInput.focus(); } catch (ignore) {}
-                    }
-                    console.log('Modal de edição mostrado com sucesso.');
+                    if (firstInput) try { firstInput.focus(); } catch (ignore) {}
                     return;
                 }
 
@@ -321,7 +334,7 @@ export function setupAdocao() {
                 const modalEditar = document.getElementById('modal-editar-adocao');
                 const id = document.getElementById('edit-adocao-id').value;
                 const dadosAtualizados = {
-                    nomePet: document.getElementById('edit-adocao-nome-pet').value,
+                    nome_pet: document.getElementById('edit-adocao-nome-pet').value,
                     idadePet: document.getElementById('edit-adocao-idade-pet').value,
                     observacoes: document.getElementById('edit-adocao-observacoes').value,
                     tutorNome: document.getElementById('edit-adocao-tutor-nome').value,

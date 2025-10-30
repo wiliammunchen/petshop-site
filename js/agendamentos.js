@@ -1,7 +1,9 @@
+// petshop-site/js/agendamentos.js
+// Adaptado para usar nomes do banco (snake_case), IDs como strings e normalização de joins.
+
 import { supabase } from './supabase-config.js';
 import { gerarImpressaoAgendamento } from './impressao.js';
 
-// Função auxiliar copiada de relatorios.js para uso local
 function getPeriodRange(period, startDate, endDate) {
     if (period === 'personalizado') {
         const start = new Date(startDate);
@@ -36,7 +38,6 @@ function getPeriodRange(period, startDate, endDate) {
 }
 
 export function setupAgendamentos() {
-    // --- SELETORES DO DOM ---
     const tabelaAgendamentosBody = document.querySelector('#tabela-agendamentos tbody');
     const btnNovoAgendamento = document.getElementById('btn-novo-agendamento');
     const modal = document.getElementById('modal-agendamento');
@@ -49,7 +50,6 @@ export function setupAgendamentos() {
     const selectTransporte = document.getElementById('agendamento-entrega');
     const selectFormaPagamento = document.getElementById('agendamento-pagamento');
 
-    // --- SELETORES DOS NOVOS FILTROS ---
     const formFiltros = document.getElementById('form-filtros-agenda');
     const filtroPeriodo = document.getElementById('agenda-periodo');
     const filtroDataInicio = document.getElementById('agenda-data-inicio');
@@ -61,7 +61,6 @@ export function setupAgendamentos() {
     let servicosAdicionais = [];
     let clientesECachePets = {};
 
-    // --- LÓGICA DOS FILTROS ---
     if (formFiltros) {
         filtroPeriodo.addEventListener('change', () => {
             const isPersonalizado = filtroPeriodo.value === 'personalizado';
@@ -100,11 +99,9 @@ export function setupAgendamentos() {
                 "Marcá-lo como 'Realizado' agora não será considerado no cálculo do tempo médio de execução.\n\n" +
                 "Deseja continuar mesmo assim?"
             );
-            if (!proceed) {
-                return;
-            }
+            if (!proceed) return;
         }
-        
+
         let updateData = { status: novoStatus };
         if (novoStatus === 'Realizado') {
             updateData.data_hora_fim = now.toISOString();
@@ -115,9 +112,8 @@ export function setupAgendamentos() {
             .update(updateData)
             .eq('id', agendamentoId);
 
-        if (error) {
-            alert(`Erro ao atualizar o status: ${error.message}`);
-        } else {
+        if (error) alert(`Erro ao atualizar o status: ${error.message}`);
+        else {
             alert('Status do agendamento atualizado com sucesso!');
             await carregarAgendamentos();
         }
@@ -130,7 +126,7 @@ export function setupAgendamentos() {
             console.error('Erro ao carregar formas de pagamento', error);
             return;
         }
-        formasDePagamentoCache = data;
+        formasDePagamentoCache = data || [];
         selectFormaPagamento.innerHTML = '<option value="">Selecione...</option>';
         formasDePagamentoCache.forEach(f => {
             selectFormaPagamento.innerHTML += `<option value="${f.id}" data-taxa="${f.taxa_percentual}">${f.nome}</option>`;
@@ -139,7 +135,6 @@ export function setupAgendamentos() {
 
     async function carregarAgendamentos() {
         if (!tabelaAgendamentosBody) return;
-
         tabelaAgendamentosBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Carregando agendamentos...</td></tr>';
 
         const { start, end } = getPeriodRange(filtroPeriodo.value, filtroDataInicio.value, filtroDataFim.value);
@@ -149,12 +144,12 @@ export function setupAgendamentos() {
             .select(`
                 id, status, data_hora_inicio, valor_cobrado, 
                 cliente_id, clientes (nome, status), 
-                agendamento_detalhes(pets(nome))
+                agendamento_detalhes ( pets ( nome ), servicos ( nome ) )
             `)
             .gte('data_hora_inicio', start)
             .lte('data_hora_inicio', end)
             .order('data_hora_inicio', { ascending: false });
-        
+
         if (status !== 'todos') {
             query = query.eq('status', status);
         } else {
@@ -164,7 +159,7 @@ export function setupAgendamentos() {
         const { data, error } = await query;
 
         if (error) {
-            console.error("Erro ao carregar agendamentos:", error);
+            console.error('Erro ao carregar agendamentos:', error);
             tabelaAgendamentosBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Erro ao carregar agendamentos.</td></tr>';
             return;
         }
@@ -184,7 +179,7 @@ export function setupAgendamentos() {
             const linhaClass = clientePendente ? 'cliente-pendente' : (ag.status === 'pendente' ? 'pendente' : '');
 
             let clienteInfo = ag.clientes?.nome || '<span style="color: #cc0000;">Cliente Removido</span>';
-            let petInfo = [...new Set(ag.agendamento_detalhes.map(d => d.pets?.nome).filter(Boolean))].join(', ');
+            let petInfo = Array.isArray(ag.agendamento_detalhes) ? [...new Set(ag.agendamento_detalhes.map(d => d.pets?.nome).filter(Boolean))].join(', ') : '';
 
             if (clientePendente) {
                 clienteInfo += ' <span class="status-badge status-pendente" style="font-size: 0.7rem;">CADASTRO PENDENTE</span>';
@@ -212,37 +207,24 @@ export function setupAgendamentos() {
         });
     }
 
-async function carregarClientesEServicos() {
-        const { data: bairros, error: bairrosError } = await supabase.from('bairros').select('nome, valor_tele_busca');
-        if (bairrosError) {
-            console.error("Erro ao carregar bairros:", bairrosError);
-            return;
-        }
-        
+    async function carregarClientesEServicos() {
+        const { data: bairros } = await supabase.from('bairros').select('nome, valor_tele_busca');
         const mapaValoresBairros = {};
-        bairros.forEach(b => {
-            mapaValoresBairros[b.nome] = b.valor_tele_busca;
-        });
+        (bairros || []).forEach(b => mapaValoresBairros[b.nome] = b.valor_tele_busca);
 
-        const { data: clientes, error: clientesError } = await supabase
+        const { data: clientes } = await supabase
             .from('clientes')
             .select('id, nome, bairro, pets(id, nome)')
             .order('nome');
 
-        if (clientesError) {
-            console.error("Erro ao carregar clientes:", clientesError);
-            return;
+        if (selectCliente) {
+            selectCliente.innerHTML = '<option value="">Selecione um cliente...</option>';
         }
-
-        selectCliente.innerHTML = '<option value="">Selecione um cliente...</option>';
-        clientes.forEach(c => {
-            selectCliente.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
-            
-            const valorTele = mapaValoresBairros[c.bairro] || 0;
-
+        (clientes || []).forEach(c => {
+            if (selectCliente) selectCliente.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
             clientesECachePets[c.id] = {
-                pets: c.pets,
-                valorTeleBusca: valorTele
+                pets: c.pets || [],
+                valorTeleBusca: mapaValoresBairros[c.bairro] || 0
             };
         });
 
@@ -273,7 +255,7 @@ async function carregarClientesEServicos() {
             }
         }
         const totalGeral = totalServicos + taxaTransporte;
-        inputValorTotal.value = totalGeral.toFixed(2);
+        if (inputValorTotal) inputValorTotal.value = totalGeral.toFixed(2);
     }
 
     function renderizarPetCard(pet) {
@@ -301,7 +283,7 @@ async function carregarClientesEServicos() {
 
     async function abrirModalDeEdicao(id) {
         const { data: ag } = await supabase.from('agendamentos').select('*, agendamento_detalhes(*)').eq('id', id).single();
-        if (!ag) { alert("Agendamento não encontrado!"); return; }
+        if (!ag) { alert('Agendamento não encontrado!'); return; }
         form.reset();
         await carregarClientesEServicos();
         tituloModal.innerHTML = `<i class="fas fa-edit"></i> Editar Agendamento #${String(id).padStart(5,'0')}`;
@@ -309,11 +291,11 @@ async function carregarClientesEServicos() {
         selectCliente.value = ag.cliente_id;
         selectCliente.dispatchEvent(new Event('change'));
         setTimeout(() => {
-            ag.agendamento_detalhes.forEach(detalhe => {
+            (ag.agendamento_detalhes || []).forEach(detalhe => {
                 const card = petsEServicosContainer.querySelector(`.pet-servicos-card[data-pet-id="${detalhe.pet_id}"]`);
-                if(card) {
-                    const servico = [...servicosPrincipais, ...servicosAdicionais].find(s => s.id == detalhe.servico_id);
-                    if(servico) {
+                if (card) {
+                    const servico = [...servicosPrincipais, ...servicosAdicionais].find(s => String(s.id) == String(detalhe.servico_id));
+                    if (servico) {
                         if (servico.tipo_servico === 'principal') {
                             card.querySelector('.servico-principal').value = servico.id;
                         } else {
@@ -336,7 +318,7 @@ async function carregarClientesEServicos() {
         modal.style.display = 'block';
     }
 
-    btnNovoAgendamento?.addEventListener('click', async () => { 
+    btnNovoAgendamento?.addEventListener('click', async () => {
         await carregarClientesEServicos();
         form.reset();
         document.getElementById('agendamento-id').value = '';
@@ -355,7 +337,7 @@ async function carregarClientesEServicos() {
         } else {
             petsEServicosContainer.innerHTML = '<p class="placeholder-text">Este cliente não possui pets cadastrados.</p>';
         }
-        atualizarValorTotal(); 
+        atualizarValorTotal();
     });
 
     petsEServicosContainer?.addEventListener('change', (e) => {
@@ -374,7 +356,7 @@ async function carregarClientesEServicos() {
                 target.value = '';
                 return;
             }
-            const servico = servicosAdicionais.find(s => s.id == servicoId);
+            const servico = servicosAdicionais.find(s => String(s.id) == String(servicoId));
             if (servico) {
                 listaAdicionais.innerHTML += `<li class="servico-item" data-servico-id="${servico.id}" data-valor="${servico.valor}"><span>${servico.nome}</span><span>R$ ${servico.valor.toFixed(2)} <button type="button" class="btn-delete-servico-item btn-delete">&times;</button></span></li>`;
             }
@@ -390,9 +372,7 @@ async function carregarClientesEServicos() {
         }
     });
 
-    selectTransporte?.addEventListener('change', () => {
-        atualizarValorTotal(); 
-    });
+    selectTransporte?.addEventListener('change', () => atualizarValorTotal());
 
     form?.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -413,13 +393,13 @@ async function carregarClientesEServicos() {
                 isValid = false;
                 return;
             }
-            const servicoPrincipal = [...servicosPrincipais, ...servicosAdicionais].find(s => s.id === parseInt(servicoPrincipalId, 10));
+            const servicoPrincipal = [...servicosPrincipais, ...servicosAdicionais].find(s => String(s.id) === String(servicoPrincipalId));
             if (servicoPrincipal) {
-                detalhesParaInserir.push({ pet_id: parseInt(petId, 10), servico_id: servicoPrincipal.id, valor_cobrado: parseFloat(servicoPrincipal.valor) });
+                detalhesParaInserir.push({ pet_id: String(petId), servico_id: String(servicoPrincipal.id), valor_cobrado: parseFloat(servicoPrincipal.valor) });
             }
             card.querySelectorAll('.servico-item').forEach(item => {
-                const servicoAdicional = [...servicosPrincipais, ...servicosAdicionais].find(s => s.id == item.dataset.servicoId);
-                detalhesParaInserir.push({ pet_id: parseInt(petId, 10), servico_id: servicoAdicional.id, valor_cobrado: parseFloat(item.dataset.valor) });
+                const servicoAdicional = [...servicosPrincipais, ...servicosAdicionais].find(s => String(s.id) == String(item.dataset.servicoId));
+                detalhesParaInserir.push({ pet_id: String(petId), servico_id: String(servicoAdicional.id), valor_cobrado: parseFloat(item.dataset.valor) });
             });
         });
         if (!isValid) return;
@@ -428,12 +408,12 @@ async function carregarClientesEServicos() {
             return;
         }
         const pagamentoOption = selectFormaPagamento.options[selectFormaPagamento.selectedIndex];
-        const formaPagamentoId = pagamentoOption.value ? parseInt(pagamentoOption.value) : null;
+        const formaPagamentoId = pagamentoOption ? (pagamentoOption.value ? String(pagamentoOption.value) : null) : null;
         const agendamentoData = {
             cliente_id: clienteId,
             data_hora_inicio: new Date(`${document.getElementById('agendamento-data').value}T${document.getElementById('agendamento-hora').value}`).toISOString(),
             status: 'Agendado',
-            valor_cobrado: parseFloat(inputValorTotal.value),
+            valor_cobrado: parseFloat(inputValorTotal.value || 0),
             observacoes: document.getElementById('agendamento-obs').value,
             tipo_entrega: document.getElementById('agendamento-entrega').value,
             forma_pagamento_id: formaPagamentoId
@@ -456,7 +436,7 @@ async function carregarClientesEServicos() {
             modal.style.display = 'none';
             await carregarAgendamentos();
         } catch (error) {
-            alert('Falha na solicitação: ' + error.message);
+            alert('Falha na solicitação: ' + (error.message || error));
         }
     });
 
@@ -464,49 +444,32 @@ async function carregarClientesEServicos() {
         const editBtn = e.target.closest('.btn-edit-agendamento');
         const printBtn = e.target.closest('.btn-print-agendamento');
         const cancelBtn = e.target.closest('.btn-cancel-agendamento');
-        const deleteBtn = e.target.closest('.btn-delete-agendamento'); // <-- Seletor do botão de excluir
+        const deleteBtn = e.target.closest('.btn-delete-agendamento');
         const realizadoBtn = e.target.closest('.btn-status-realizado');
         const faltouBtn = e.target.closest('.btn-status-faltou');
 
-        if (editBtn) {
-            abrirModalDeEdicao(editBtn.dataset.id);
-        }
+        if (editBtn) abrirModalDeEdicao(editBtn.dataset.id);
         else if (cancelBtn) {
-            if (confirm('Deseja CANCELAR este agendamento? O status será alterado para "Cancelado".')) {
+            if (confirm('Deseja CANCELAR este agendamento? O status será alterado para "cancelado".')) {
                 await updateAgendamentoStatus(cancelBtn.dataset.id, 'cancelado');
             }
-        }
-        // LÓGICA DO BOTÃO EXCLUIR ADICIONADA AQUI
-        else if (deleteBtn) {
+        } else if (deleteBtn) {
             const id = deleteBtn.dataset.id;
             if (confirm(`ATENÇÃO: Deseja EXCLUIR PERMANENTEMENTE o agendamento #${String(id).padStart(5, '0')}?\n\nEsta ação não pode ser desfeita.`)) {
                 await supabase.from('agendamento_detalhes').delete().eq('agendamento_id', id);
                 const { error } = await supabase.from('agendamentos').delete().eq('id', id);
-
-                if (error) {
-                    alert('Erro ao excluir agendamento: ' + error.message);
-                } else {
-                    alert('Agendamento excluído com sucesso!');
-                    await carregarAgendamentos();
-                }
+                if (error) alert('Erro ao excluir agendamento: ' + error.message);
+                else { alert('Agendamento excluído com sucesso!'); await carregarAgendamentos(); }
             }
-        }
-        else if (realizadoBtn) {
-            if (confirm('Deseja marcar este agendamento como "Realizado"?')) {
-                updateAgendamentoStatus(realizadoBtn.dataset.id, 'Realizado');
-            }
-        }
-        else if (faltouBtn) {
-            if (confirm('Deseja marcar este agendamento como "Faltou"?')) {
-                updateAgendamentoStatus(faltouBtn.dataset.id, 'Faltou');
-            }
-        }
-        else if (printBtn) {
+        } else if (realizadoBtn) {
+            if (confirm('Deseja marcar este agendamento como "Realizado"?')) updateAgendamentoStatus(realizadoBtn.dataset.id, 'Realizado');
+        } else if (faltouBtn) {
+            if (confirm('Deseja marcar este agendamento como "Faltou"?')) updateAgendamentoStatus(faltouBtn.dataset.id, 'Faltou');
+        } else if (printBtn) {
             gerarImpressaoAgendamento(printBtn.dataset.id);
         }
     });
 
-    // --- CARREGAMENTO INICIAL ---
     carregarAgendamentos();
     carregarClientesEServicos();
     carregarFormasDePagamento();

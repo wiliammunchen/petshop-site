@@ -1,5 +1,3 @@
-// petshop-site/js/main.js (VERSÃO CORRIGIDA)
-
 import { setupAuth } from './auth.js';
 import { setupUI } from './ui.js';
 import { setupClientes } from './clientes.js';
@@ -27,7 +25,7 @@ async function setupStories() {
         .select('media_url, media_type')
         .order('created_at', { ascending: true });
     
-    if (error || stories.length === 0) {
+    if (error || !stories || stories.length === 0) {
         const profileContainer = document.getElementById('story-profile-container');
         if (profileContainer) profileContainer.style.display = 'none';
         return;
@@ -36,7 +34,7 @@ async function setupStories() {
     const storyImage = document.getElementById('story-image');
     const storyVideo = document.getElementById('story-video');
     const soundBtn = document.getElementById('story-sound-btn');
-    const soundBtnIcon = soundBtn.querySelector('i');
+    const soundBtnIcon = soundBtn?.querySelector('i');
     const progressBarsContainer = document.getElementById('story-progress-bars');
     const closeBtn = document.getElementById('story-close-btn');
     const navPrev = document.getElementById('story-nav-prev');
@@ -72,22 +70,26 @@ async function setupStories() {
         resetProgressBars();
         fillProgressBars(index);
         
-        if (story.media_type === 'video') {
-            soundBtn.classList.remove('story-sound-btn-hidden');
-            storyImage.style.display = 'none';
+        if (story.media_type === 'video' && storyVideo) {
+            if (soundBtn) soundBtn.classList.remove('story-sound-btn-hidden');
+            if (storyImage) storyImage.style.display = 'none';
             storyVideo.style.display = 'block';
             storyVideo.src = story.media_url;
-            storyVideo.currentTime = 0;
+            try { storyVideo.currentTime = 0; } catch {}
             
+            // default muted: false (user can toggle)
             storyVideo.muted = false; 
-            soundBtnIcon.className = 'fas fa-volume-up';
+            if (soundBtnIcon) soundBtnIcon.className = 'fas fa-volume-up';
             
-            storyVideo.play().catch(e => console.error("Erro ao tocar vídeo:", e));
+            storyVideo.play().catch(e => console.error('Erro ao tocar vídeo:', e));
 
             storyVideo.ontimeupdate = () => {
+                if (!storyVideo.duration || isNaN(storyVideo.duration)) return;
                 const progress = (storyVideo.currentTime / storyVideo.duration) * 100;
-                currentProgressBar.style.transition = 'none';
-                currentProgressBar.style.width = `${progress}%`;
+                if (currentProgressBar) {
+                    currentProgressBar.style.transition = 'none';
+                    currentProgressBar.style.width = `${progress}%`;
+                }
             };
 
             storyVideo.onended = () => {
@@ -95,14 +97,18 @@ async function setupStories() {
             };
 
         } else { // É uma imagem
-            soundBtn.classList.add('story-sound-btn-hidden');
-            storyVideo.style.display = 'none';
-            storyImage.style.display = 'block';
-            storyImage.src = story.media_url;
+            if (soundBtn) soundBtn.classList.add('story-sound-btn-hidden');
+            if (storyVideo) storyVideo.style.display = 'none';
+            if (storyImage) {
+                storyImage.style.display = 'block';
+                storyImage.src = story.media_url;
+            }
 
             setTimeout(() => {
-                currentProgressBar.style.transition = `width 30s linear`;
-                currentProgressBar.style.width = '100%';
+                if (currentProgressBar) {
+                    currentProgressBar.style.transition = `width 30s linear`;
+                    currentProgressBar.style.width = '100%';
+                }
             }, 50);
 
             storyTimer = setTimeout(goToNextStory, 30000);
@@ -110,7 +116,9 @@ async function setupStories() {
     }
 
     function toggleSound() {
+        if (!storyVideo) return;
         storyVideo.muted = !storyVideo.muted;
+        if (!soundBtnIcon) return;
         if (storyVideo.muted) {
             soundBtnIcon.className = 'fas fa-volume-mute';
         } else {
@@ -148,15 +156,17 @@ async function setupStories() {
         viewer.classList.add('story-viewer-hidden');
     }
 
+    // cria progress bars
     progressBarsContainer.innerHTML = stories.map(() => `
         <div class="progress-bar"><div class="progress-bar-inner"></div></div>
     `).join('');
 
-    storyRing.addEventListener('click', openViewer);
-    closeBtn.addEventListener('click', closeViewer);
-    navNext.addEventListener('click', goToNextStory);
-    navPrev.addEventListener('click', goToPrevStory);
-    soundBtn.addEventListener('click', toggleSound);
+    // adiciona listeners com checagem de existência
+    if (storyRing) storyRing.addEventListener('click', openViewer);
+    if (closeBtn) closeBtn.addEventListener('click', closeViewer);
+    if (navNext) navNext.addEventListener('click', goToNextStory);
+    if (navPrev) navPrev.addEventListener('click', goToPrevStory);
+    if (soundBtn) soundBtn.addEventListener('click', toggleSound);
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -166,23 +176,31 @@ document.addEventListener('DOMContentLoaded', async function() {
     await setupAuth();
 
     if (isDashboardPage) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-            alert("Acesso negado. Por favor, faça o login.");
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                alert('Acesso negado. Por favor, faça o login.');
+                window.location.href = 'acesso-restrito.html';
+                return;
+            }
+        } catch (err) {
+            console.warn('Erro ao verificar usuário:', err);
+            alert('Acesso negado. Por favor, faça o login.');
             window.location.href = 'acesso-restrito.html';
-        } else {
-            // Roda os scripts específicos do dashboard
-            setupDashboard();
-            setupClientes();
-            setupProdutos();
-            setupCadastros();
-            setupAgendamentos();
-            setupRelatorios();
-            setupAdocao(); // Chamada ÚNICA para a lógica de adoção no dashboard
+            return;
         }
+
+        // Roda os scripts específicos do dashboard
+        setupDashboard();
+        setupClientes();
+        setupProdutos();
+        setupCadastros();
+        setupAgendamentos();
+        setupRelatorios();
+        setupAdocao(); // lógica de adoção no dashboard
     } else {
         // Roda os scripts das páginas públicas
-        setupAdocao(); // Chamada para a lógica de adoção na pág. pública
+        setupAdocao(); // lógica de adoção na página pública
         setupServicosPublicos();
         setupStories(); 
     }
